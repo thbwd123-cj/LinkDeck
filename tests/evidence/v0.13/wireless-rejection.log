@@ -1,0 +1,4 @@
+PASS: system advertises separate live pairing and connection ports
+PASS: real Android pairing daemon rejects wrong code
+REAL ANDROID WRONG-CODE REJECTION PASSED: 2 checks.
+

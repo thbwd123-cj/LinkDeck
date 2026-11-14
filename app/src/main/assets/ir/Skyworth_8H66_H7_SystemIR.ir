@@ -1,0 +1,84 @@
+Filetype: IR signals file
+Version: 1
+# Candidate reconstructed from the user's TV /system/etc/key.xml (2026-11-04).
+# Samsung32: address 0E 0E; key values store inverted command, command, address, address.
+# Verify on the physical TV before treating this profile as compatible.
+#
+name: UP
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 42 00 00 00
+#
+name: DOWN
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 43 00 00 00
+#
+name: LEFT
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 44 00 00 00
+#
+name: RIGHT
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 45 00 00 00
+#
+name: OK
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 46 00 00 00
+#
+name: BACK
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 5B 00 00 00
+#
+name: HOME
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 78 00 00 00
+#
+name: MENU
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 11 00 00 00
+#
+name: POWER
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 0C 00 00 00
+#
+name: VOL_UP
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 14 00 00 00
+#
+name: VOL_DOWN
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 15 00 00 00
+#
+name: MUTE
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 0D 00 00 00
+#
+# SOURCE is present in the television key.xml but has not been physically verified.
+name: SOURCE
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 0F 00 00 00

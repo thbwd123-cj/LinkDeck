@@ -1,0 +1,26 @@
+package cn.linkdeck.qa;
+import android.app.*;import android.content.*;import android.os.*;import android.view.*;import android.widget.*;import cn.linkdeck.adb.*;import java.io.*;import java.net.*;import java.nio.*;import java.util.*;import java.util.concurrent.*;import java.util.regex.*;
+/** Real Android touch/accessibility events -> real AdbClient -> local synthetic peer. Never a TV. */
+public class Version011RemoteChecks extends AerialUiChecks {
+ static int code(String s){byte[] b=s.getBytes();return (b[0]&255)|((b[1]&255)<<8)|((b[2]&255)<<16)|((b[3]&255)<<24);}
+ static byte[] exact(InputStream in,int n)throws Exception{byte[] b=new byte[n];int off=0;while(off<n){int k=in.read(b,off,n-off);if(k<0)throw new EOFException();off+=k;}return b;}
+ static void send(OutputStream out,String command,int a,int b,byte[] data)throws Exception{int sum=0;for(byte v:data)sum+=v&255;ByteBuffer h=ByteBuffer.allocate(24).order(ByteOrder.LITTLE_ENDIAN).putInt(code(command)).putInt(a).putInt(b).putInt(data.length).putInt(sum).putInt(code(command)^-1);out.write(h.array());out.write(data);out.flush();}
+ final List<Integer> events=new CopyOnWriteArrayList<>();int count(int c){return Collections.frequency(events,c);}
+ void touch(View v,int action)throws Exception{runOnMainSync(()->{long now=SystemClock.uptimeMillis();android.view.MotionEvent event=android.view.MotionEvent.obtain(now,now,action,10,10,0);v.dispatchTouchEvent(event);event.recycle();});}
+ public void onStart(){Bundle result=new Bundle();boolean success=false;AdbClient client=null;ServerSocket listener=null;try{
+  listener=new ServerSocket(0);final ServerSocket peer=listener;
+  Thread server=new Thread(()->{try(Socket socket=peer.accept()){InputStream in=socket.getInputStream();OutputStream out=socket.getOutputStream();boolean hello=false;while(true){ByteBuffer h=ByteBuffer.wrap(exact(in,24)).order(ByteOrder.LITTLE_ENDIAN);int cmd=h.getInt(),local=h.getInt(),remote=h.getInt(),size=h.getInt();byte[] payload=exact(in,size);if(!hello){send(out,"CNXN",0x01000000,4096,"device::\0".getBytes("UTF-8"));hello=true;continue;}if(cmd==code("OPEN")){String service=new String(payload,"UTF-8");Matcher key=Pattern.compile("input keyevent ([0-9]+)").matcher(service);if(key.find())events.add(Integer.parseInt(key.group(1)));Matcher tag=Pattern.compile("__LINKDECK_[0-9a-f]+__").matcher(service);if(!tag.find())throw new IOException("Expected legacy wrapper");send(out,"OKAY",local+100,local,new byte[0]);send(out,"WRTE",local+100,local,("\n"+tag.group()+"0\n").getBytes("UTF-8"));send(out,"CLSE",local+100,local,new byte[0]);}}}catch(Exception ignored){}});server.setDaemon(true);server.start();
+  getTargetContext().getSharedPreferences("linkdeck",0).edit().putBoolean("resume_connection",false).putBoolean("reduce_motion",true).commit();
+  activity=startActivitySync(new Intent().setClassName("cn.linkdeck.adb","cn.linkdeck.adb.MainActivity").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_CLEAR_TASK));
+  client=new AdbClient();client.connect("127.0.0.1",listener.getLocalPort(),new AdbIdentity(new File(getTargetContext().getCacheDir(),"qa011-peer-"+UUID.randomUUID())));set("adb",client);set("device","遥控测试 · 本地虚拟通道");call("show",new Class[]{int.class},1);Thread.sleep(500);
+  View up=find(activity.getWindow().getDecorView(),"⌃"),left=find(activity.getWindow().getDecorView(),"‹"),right=find(activity.getWindow().getDecorView(),"›"),down=find(activity.getWindow().getDecorView(),"⌄");
+  touch(up,MotionEvent.ACTION_DOWN);touch(up,MotionEvent.ACTION_UP);waitFor("physical tap sends exactly one UP key",()->count(19)==1);Thread.sleep(650);check(count(19)==1,"tap release does not add a click duplicate or repeat");
+  runOnMainSync(()->left.performClick());waitFor("accessibility click sends one LEFT key",()->count(21)==1);
+  touch(right,MotionEvent.ACTION_DOWN);waitFor("held direction repeats through actual ADB transport",()->count(22)>=3);touch(right,MotionEvent.ACTION_CANCEL);Thread.sleep(450);int afterCancel=count(22);Thread.sleep(650);check(count(22)==afterCancel,"cancel stops repeating direction");
+  String[] labels={"返回","主页","菜单","音量 −","音量 ＋","确定"};int[] codes={4,3,82,25,24,23};for(int i=0;i<labels.length;i++){long deadline=System.currentTimeMillis()+6000;while(((java.util.concurrent.atomic.AtomicBoolean)field("keyPending")).get()&&System.currentTimeMillis()<deadline)Thread.sleep(40);final int expected=codes[i];tap(labels[i]);waitFor("accessible remote action sends correct key: "+labels[i],()->count(expected)==1);}
+  tap("电源 / 待机");waitFor("power action requires explicit confirmation",()->dialogHas("切换电源状态")&&dialogHas("取消"));dialogTap("取消");check(count(26)==0,"cancel power sheet sends no standby key");
+  touch(down,MotionEvent.ACTION_DOWN);waitFor("DOWN press reaches transport",()->count(20)==1);call("show",new Class[]{int.class},0);Thread.sleep(800);check(count(20)==1,"leaving remote screen stops detached control repeats");success=true;
+ }catch(Throwable t){result.putString("stream",android.util.Log.getStackTraceString(t));}finally{if(client!=null)client.close();try{if(listener!=null)listener.close();}catch(Exception ignored){}}
+ if(success)result.putString("stream","VERSION 011 REMOTE INPUT PASSED: "+passes+" checks.\n");finish(success?-1:0,result);
+ }
+}

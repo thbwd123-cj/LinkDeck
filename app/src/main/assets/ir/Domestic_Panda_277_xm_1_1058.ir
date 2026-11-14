@@ -1,0 +1,52 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://github.com/flipperdevices/IRDB/blob/dev/database/categories/TVs/Panda/Panda_277_xm_1_1058/Panda_277_xm_1_1058.ir
+# License: MIT (flipperdevices/IRDB)
+#
+name: DOWN
+type: parsed
+protocol: Samsung32
+address: 08 00 00 00
+command: 02 00 00 00
+#
+##
+name: BACK
+type: parsed
+protocol: Samsung32
+address: 08 00 00 00
+command: 25 00 00 00
+#
+##
+name: UP
+type: parsed
+protocol: Samsung32
+address: 08 00 00 00
+command: 03 00 00 00
+#
+##
+name: POWER
+type: parsed
+protocol: Samsung32
+address: 08 00 00 00
+command: 07 00 00 00
+#
+##
+name: VOL_UP
+type: parsed
+protocol: Samsung32
+address: 08 00 00 00
+command: 05 00 00 00
+#
+##
+name: MUTE
+type: parsed
+protocol: Samsung32
+address: 08 00 00 00
+command: 09 00 00 00
+#
+##
+name: LEFT
+type: parsed
+protocol: Samsung32
+address: 08 00 00 00
+command: 04 00 00 00

@@ -1,0 +1,28 @@
+PASS: tab 0 starts its finite entry motion
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+PASS: tab 1 starts its finite entry motion
+PASS: tab 2 starts its finite entry motion
+PASS: tab 3 starts its finite entry motion
+PASS: tab 4 starts its finite entry motion
+PASS: power is an accessible icon control
+PASS: relative slider explains its actual semantics
+PASS: neutral hold sends no volume command
+PASS: drag right repeats real VOLUME_UP commands
+PASS: release lets the one in-flight key finish
+PASS: release stops commands and springs to center
+PASS: drag left sends real VOLUME_DOWN
+PASS: cancel stops repeat and resets thumb
+PASS: accessibility slider action sends one volume step
+PASS: accessibility action does not start a repeat loop
+PASS: icon power retains standby confirmation
+PASS: opening a sheet stops the held volume gesture
+PASS: cancel icon power sends no power command
+PASS: leaving a tab stops volume repeats
+PASS: offline volume remains connection-gated
+PASS: offline gesture sends no volume command
+PASS: reduced motion disables tab entry animations
+PASS: reduced motion disables slider spring animation
+VERSION 012 MOTION INPUT PASSED: 23 checks.
+

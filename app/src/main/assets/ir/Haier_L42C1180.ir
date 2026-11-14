@@ -1,0 +1,60 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://github.com/UberGuidoZ/Flipper-IRDB/blob/main/TVs/Haier/Haier_L42C1180.ir
+# License: CC0-1.0
+#
+name: Power
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 08 00 00 00
+#
+##
+name: Enter
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 44 00 00 00
+#
+##
+name: Vol_up
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 02 00 00 00
+#
+##
+name: Up
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 00 00 00 00
+#
+##
+name: Down
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 01 00 00 00
+#
+##
+name: Menu
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 43 00 00 00
+#
+##
+name: Mute
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 09 00 00 00
+#
+##
+name: Exit
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 5B 00 00 00
+#

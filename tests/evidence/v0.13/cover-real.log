@@ -1,0 +1,5 @@
+PASS: covering install runs the final 0.13.0 binary
+PASS: real covering install preserves private settings
+PASS: real covering install preserves the existing ADB key
+REAL 012 TO 013 COVER PASSED: 3 checks.
+

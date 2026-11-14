@@ -1,0 +1,59 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://github.com/flipperdevices/IRDB/blob/dev/database/categories/TVs/Skyworth/Skyworth_57_xm_1_3335/Skyworth_57_xm_1_3335.ir
+# License: MIT (flipperdevices/IRDB)
+#
+name: DOWN
+type: parsed
+protocol: NEC
+address: FE 00 00 00
+command: 4A 00 00 00
+#
+##
+name: UP
+type: parsed
+protocol: NEC
+address: FE 00 00 00
+command: 44 00 00 00
+#
+##
+name: POWER
+type: parsed
+protocol: NEC
+address: FE 00 00 00
+command: 04 00 00 00
+#
+##
+name: VOL_UP
+type: parsed
+protocol: NEC
+address: FE 00 00 00
+command: 1B 00 00 00
+#
+##
+name: RIGHT
+type: parsed
+protocol: NEC
+address: FE 00 00 00
+command: 48 00 00 00
+#
+##
+name: MENU
+type: parsed
+protocol: NEC
+address: FE 00 00 00
+command: 1A 00 00 00
+#
+##
+name: MUTE
+type: parsed
+protocol: NEC
+address: FE 00 00 00
+command: 01 00 00 00
+#
+##
+name: LEFT
+type: parsed
+protocol: NEC
+address: FE 00 00 00
+command: 46 00 00 00

@@ -1,0 +1,22 @@
+PASS: native SPAKE2 authenticated client frame 0
+PASS: native SPAKE2 authenticated server frame 0
+PASS: tampering is rejected 0
+PASS: native SPAKE2 authenticated client frame 1
+PASS: native SPAKE2 authenticated server frame 1
+PASS: tampering is rejected 1
+PASS: native SPAKE2 authenticated client frame 2
+PASS: native SPAKE2 authenticated server frame 2
+PASS: tampering is rejected 2
+PASS: native SPAKE2 authenticated client frame 3
+PASS: native SPAKE2 authenticated server frame 3
+PASS: tampering is rejected 3
+PASS: native SPAKE2 authenticated client frame 4
+PASS: native SPAKE2 authenticated server frame 4
+PASS: tampering is rejected 4
+PASS: wrong pairing code cannot authenticate encrypted peer info
+PASS: bundled TLS provider supports TLS 1.3 without hidden API access
+PASS: certificate is available for mutual TLS
+PASS: invalid pairing code is erased without network access
+PASS: pre-start cancellation prevents pairing and erases its code
+NATIVE PAIRING CRYPTO PASSED: 20 checks.
+

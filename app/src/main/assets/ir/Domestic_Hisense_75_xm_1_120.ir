@@ -1,0 +1,59 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://github.com/flipperdevices/IRDB/blob/dev/database/categories/TVs/Hisense/Hisense_75_xm_1_120/Hisense_75_xm_1_120.ir
+# License: MIT (flipperdevices/IRDB)
+#
+name: DOWN
+type: parsed
+protocol: NEC
+address: 50 00 00 00
+command: 71 00 00 00
+#
+##
+name: BACK
+type: parsed
+protocol: NEC
+address: 50 00 00 00
+command: 54 00 00 00
+#
+##
+name: UP
+type: parsed
+protocol: NEC
+address: 50 00 00 00
+command: 70 00 00 00
+#
+##
+name: POWER
+type: parsed
+protocol: NEC
+address: 50 00 00 00
+command: 17 00 00 00
+#
+##
+name: VOL_UP
+type: parsed
+protocol: NEC
+address: 50 00 00 00
+command: 12 00 00 00
+#
+##
+name: RIGHT
+type: parsed
+protocol: NEC
+address: 50 00 00 00
+command: 72 00 00 00
+#
+##
+name: MUTE
+type: parsed
+protocol: NEC
+address: 50 00 00 00
+command: 0B 00 00 00
+#
+##
+name: LEFT
+type: parsed
+protocol: NEC
+address: 50 00 00 00
+command: 73 00 00 00

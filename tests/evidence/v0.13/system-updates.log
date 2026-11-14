@@ -1,0 +1,43 @@
+PASS: disconnected dashboard prioritizes connection
+PASS: unified source chooser shows both choices
+PASS: real transport connected
+PASS: checked generic plan appears
+PASS: cancel removes prepared APK
+PASS: cancel installs nothing
+PASS: checked generic plan appears
+PASS: new task completes: 安装或更新电视应用
+PASS: first install version is read back
+PASS: private data marker created and read back before update
+PASS: checked generic plan appears
+PASS: update sheet compares old and candidate versions
+PASS: new task completes: 安装或更新电视应用
+PASS: actual update reads back version two
+PASS: actual covering update preserves private test data
+PASS: new task completes: 检查应用安装更新
+PASS: downgrade blocked with clear explanation
+PASS: downgrade leaves installed version unchanged
+PASS: new task completes: 检查应用安装更新
+PASS: signer mismatch blocked before installation
+PASS: signature failure preserves current app and private marker
+PASS: new task completes: 检查 APK 兼容性
+PASS: per-app update rejects another package
+PASS: checked generic plan appears
+PASS: new task completes: 安装或更新电视应用
+PASS: changed source APK stops before transfer
+PASS: changed source does not modify installed app
+PASS: checked generic plan appears
+PASS: concurrent version fixture installed
+PASS: new task completes: 安装或更新电视应用
+PASS: changed installed version invalidates prepared plan
+PASS: stale confirmation cannot overwrite newer installation
+PASS: production launcher actually opens a TV-only activity
+PASS: first command result appears
+PASS: full command result is linked to its own task
+PASS: second command finishes
+PASS: task exposes complete saved result
+PASS: older full result survives a newer command
+PASS: application list refreshed
+PASS: application list uses one compact Aerial entry
+PASS: tools remove duplicate Aerial and connection entries
+VERSION 012 SYSTEM AND FLOW PASSED: 41 checks.
+

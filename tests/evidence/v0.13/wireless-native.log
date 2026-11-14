@@ -1,0 +1,15 @@
+PASS: system advertises separate live pairing and connection ports
+PASS: real Android pairing daemon authenticates the correct code
+PASS: pairing code buffer is erased after use
+PASS: unapproved TLS peer receives no command connection
+PASS: pinned encrypted ADB executes a read-only command after actual pairing
+PASS: changed encrypted identity is rejected before commands
+PASS: public UI requires first-use peer approval
+PASS: public UI establishes approved encrypted transport
+PASS: encrypted connection receives a fresh capability snapshot
+PASS: capability report distinguishes encrypted transport
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+REAL ANDROID WIRELESS PAIRING PASSED: 10 checks.
+

@@ -1,0 +1,9 @@
+package cn.linkdeck.adb;
+import android.view.*;import android.view.animation.*;
+/** Finite view transformations: underlying content alpha stays at one. */
+public final class DeckMotion {
+ private DeckMotion(){}
+ private static void start(final View v,Animation a){a.setFillAfter(false);a.setAnimationListener(new Animation.AnimationListener(){public void onAnimationStart(Animation a){}public void onAnimationRepeat(Animation a){}public void onAnimationEnd(Animation a){v.post(()->{if(v.getAnimation()==a){v.clearAnimation();v.invalidate();}});}});v.startAnimation(a);}
+ public static void enter(ViewGroup body,int direction,boolean enabled){body.setTag("deck-page-motion:"+direction+":"+enabled);if(!enabled)return;AnimationSet page=new AnimationSet(true);page.addAnimation(new AlphaAnimation(.92f,1));page.addAnimation(new TranslateAnimation(Animation.RELATIVE_TO_SELF,direction*.035f,Animation.RELATIVE_TO_SELF,0,Animation.RELATIVE_TO_SELF,direction==0?.012f:0,Animation.RELATIVE_TO_SELF,0));page.setDuration(280);page.setInterpolator(new DecelerateInterpolator());start(body,page);int order=0;for(int i=0;i<body.getChildCount()&&order<5;i++){View child=body.getChildAt(i);if(!(child instanceof ViewGroup)||child.getVisibility()!=View.VISIBLE)continue;AnimationSet card=new AnimationSet(true);card.addAnimation(new AlphaAnimation(.68f,1));card.addAnimation(new TranslateAnimation(0,0,8*body.getResources().getDisplayMetrics().density,0));card.addAnimation(new ScaleAnimation(.985f,1,.985f,1,Animation.RELATIVE_TO_SELF,.5f,Animation.RELATIVE_TO_SELF,0));card.setDuration(290);card.setStartOffset(order++*30);card.setInterpolator(new DecelerateInterpolator());start(child,card);}}
+ public static void select(View icon,boolean enabled){if(!enabled)return;ScaleAnimation a=new ScaleAnimation(.78f,1,.78f,1,Animation.RELATIVE_TO_SELF,.5f,Animation.RELATIVE_TO_SELF,.5f);a.setDuration(320);a.setInterpolator(new OvershootInterpolator(1.7f));start(icon,a);}
+}

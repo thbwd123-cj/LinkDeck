@@ -1,0 +1,12 @@
+package cn.linkdeck.qa;
+import android.app.*;import android.content.*;import android.os.*;import cn.linkdeck.adb.*;import java.io.*;
+/** Emulator-only proof of a real Android 0.12 -> 0.13 covering install and retained ADB key. */
+public class Cover13Checks extends Instrumentation {
+ boolean seed;int passes;void check(boolean ok,String name){if(!ok)throw new AssertionError(name);passes++;Bundle b=new Bundle();b.putString("stream","PASS: "+name+"\n");sendStatus(0,b);}public void onCreate(Bundle b){super.onCreate(b);seed=b!=null&&"true".equals(b.getString("seed"));start();}
+ public void onStart(){Bundle result=new Bundle();try{
+  ParcelFileDescriptor descriptor=getUiAutomation().executeShellCommand("getprop ro.kernel.qemu");ByteArrayOutputStream out=new ByteArrayOutputStream();try(InputStream in=new ParcelFileDescriptor.AutoCloseInputStream(descriptor)){byte[] b=new byte[128];int n;while((n=in.read(b))!=-1)out.write(b,0,n);}if(!out.toString("UTF-8").trim().equals("1"))throw new IOException("Disposable emulator only");
+  SharedPreferences prefs=getTargetContext().getSharedPreferences("linkdeck",0);int version=getTargetContext().getPackageManager().getPackageInfo("cn.linkdeck.adb",0).versionCode;AdbIdentity identity=new AdbIdentity(new File(getTargetContext().getFilesDir(),"identity"));String publicDigest=AppCatalog.digest(new String(identity.publicPayload(),"UTF-8"));
+  if(seed){check(version==22,"seed runs against the actual prior 0.12.0 binary");check(prefs.edit().putString("compat_cover_marker","COVER_012_013").putString("compat_cover_key",publicDigest).putString("host","192.0.2.13").putString("port","5555").putBoolean("reduce_motion",true).putBoolean("resume_connection",false).commit(),"prior version stores test settings and its real ADB identity reference");result.putString("stream","COVER SETUP PASSED: "+passes+" checks.\n");}
+  else{check(version==23,"covering install runs the final 0.13.0 binary");check(prefs.getString("compat_cover_marker","").equals("COVER_012_013")&&prefs.getString("host","").equals("192.0.2.13")&&prefs.getBoolean("reduce_motion",false),"real covering install preserves private settings");check(publicDigest.equals(prefs.getString("compat_cover_key","")),"real covering install preserves the existing ADB key");result.putString("stream","REAL 012 TO 013 COVER PASSED: "+passes+" checks.\n");}finish(-1,result);
+ }catch(Throwable e){result.putString("stream",android.util.Log.getStackTraceString(e));finish(0,result);}}
+}

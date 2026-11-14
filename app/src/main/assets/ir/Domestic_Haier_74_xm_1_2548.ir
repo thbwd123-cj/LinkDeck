@@ -1,0 +1,59 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://github.com/flipperdevices/IRDB/blob/dev/database/categories/TVs/Haier/Haier_74_xm_1_2548/Haier_74_xm_1_2548.ir
+# License: MIT (flipperdevices/IRDB)
+#
+name: DOWN
+type: parsed
+protocol: Samsung32
+address: 09 00 00 00
+command: 11 00 00 00
+#
+##
+name: UP
+type: parsed
+protocol: Samsung32
+address: 09 00 00 00
+command: 10 00 00 00
+#
+##
+name: POWER
+type: parsed
+protocol: Samsung32
+address: 09 00 00 00
+command: 0B 00 00 00
+#
+##
+name: OK
+type: parsed
+protocol: Samsung32
+address: 09 00 00 00
+command: FF 00 00 00
+#
+##
+name: VOL_UP
+type: parsed
+protocol: Samsung32
+address: 09 00 00 00
+command: 13 00 00 00
+#
+##
+name: MENU
+type: parsed
+protocol: Samsung32
+address: 09 00 00 00
+command: 33 00 00 00
+#
+##
+name: MUTE
+type: parsed
+protocol: Samsung32
+address: 09 00 00 00
+command: 14 00 00 00
+#
+##
+name: LEFT
+type: parsed
+protocol: Samsung32
+address: 09 00 00 00
+command: 12 00 00 00

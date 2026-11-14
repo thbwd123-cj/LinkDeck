@@ -1,0 +1,14 @@
+package cn.linkdeck.qa;
+import android.app.*;import android.os.*;import cn.linkdeck.adb.*;import java.io.*;import java.util.*;
+/** Native JNI SPAKE2 and Android JCA: no activity or TV settings changes. */
+public class Crypto13Checks extends Instrumentation {
+ int count;void ok(boolean b,String s){if(!b)throw new AssertionError(s);count++;Bundle x=new Bundle();x.putString("stream","PASS: "+s+"\n");sendStatus(0,x);}public void onCreate(Bundle b){super.onCreate(b);start();}
+ public void onStart(){Bundle result=new Bundle();try{
+  byte[] password="012345-plus-exporter-fixture".getBytes("UTF-8");for(int i=0;i<5;i++)try(PairingCrypto a=new PairingCrypto(password,true);PairingCrypto b=new PairingCrypto(password,false)){a.finish(b.message());b.finish(a.message());byte[] text=("peer-info-"+i).getBytes("UTF-8");ok(Arrays.equals(text,b.decrypt(a.encrypt(text))),"native SPAKE2 authenticated client frame "+i);ok(Arrays.equals(text,a.decrypt(b.encrypt(text))),"native SPAKE2 authenticated server frame "+i);byte[] modified=a.encrypt(text);modified[0]^=1;try{b.decrypt(modified);throw new AssertionError("tamper accepted");}catch(java.security.GeneralSecurityException expected){ok(true,"tampering is rejected "+i);}}
+  try(PairingCrypto a=new PairingCrypto("111111-fixture".getBytes("UTF-8"),true);PairingCrypto b=new PairingCrypto("222222-fixture".getBytes("UTF-8"),false)){a.finish(b.message());b.finish(a.message());try{b.decrypt(a.encrypt(new byte[8192]));throw new AssertionError("wrong code accepted");}catch(java.security.GeneralSecurityException expected){ok(true,"wrong pairing code cannot authenticate encrypted peer info");}}
+  File dir=new File(getTargetContext().getCacheDir(),"tls-crypto-qa");AdbIdentity identity=new AdbIdentity(dir);javax.net.ssl.SSLContext ctx=WirelessAdb.context(identity,dir);ok(ctx.getProtocol().equals("TLSv1.3"),"bundled TLS provider supports TLS 1.3 without hidden API access");ok(TlsIdentity.certificate(identity,dir).getPublicKey().getEncoded().length>0,"certificate is available for mutual TLS");
+  char[] invalid="badcode".toCharArray();try(WirelessAdb p=new WirelessAdb()){try{p.pair("127.0.0.1",1,invalid,identity,dir);throw new AssertionError("invalid code accepted");}catch(IOException expected){ok(new String(invalid).trim().isEmpty(),"invalid pairing code is erased without network access");}}
+  char[] cancelled="123456".toCharArray();try(WirelessAdb p=new WirelessAdb()){p.cancel();try{p.pair("127.0.0.1",1,cancelled,identity,dir);throw new AssertionError("cancel ignored");}catch(IOException expected){ok(new String(cancelled).trim().isEmpty()&&p.cancelled(),"pre-start cancellation prevents pairing and erases its code");}}
+  result.putString("stream","NATIVE PAIRING CRYPTO PASSED: "+count+" checks.\n");finish(-1,result);
+ }catch(Throwable e){result.putString("stream",android.util.Log.getStackTraceString(e));finish(0,result);}}
+}

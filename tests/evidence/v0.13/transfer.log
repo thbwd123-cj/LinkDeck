@@ -1,0 +1,14 @@
+PASS: real adbd connected for transfer QA
+PASS: task queue drained
+PASS: 上传文件 actual task completes
+PASS: task queue drained
+PASS: native upload preserves all 170321 bytes
+PASS: 下载文件 actual task completes
+PASS: task queue drained
+PASS: native download preserves identical bytes
+PASS: generic APK preflight opens
+PASS: 安装或更新电视应用 actual task completes
+PASS: task queue drained
+PASS: generic covering install remains present in actual PackageManager
+TRANSFER UI QA PASSED: 12 checks.
+

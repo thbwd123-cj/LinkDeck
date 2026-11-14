@@ -1,0 +1,4 @@
+PASS: seed runs against the actual prior 0.12.0 binary
+PASS: prior version stores test settings and its real ADB identity reference
+COVER SETUP PASSED: 2 checks.
+

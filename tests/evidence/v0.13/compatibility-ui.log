@@ -1,0 +1,24 @@
+PASS: wizard separates legacy, pairing and platform scope
+PASS: non-Android platform is not promised APK management
+PASS: pairing form is visible without connecting
+PASS: missing pairing fields do not start a network job
+PASS: legacy connection still works alongside new TLS support
+PASS: connection performs a fresh read-only snapshot
+PASS: generic connection never certifies desktop takeover
+PASS: report explains the limited meaning of checks
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+PASS: known missing screenshot interface disables its control
+PASS: blocked capability explains its reason
+PASS: blocked action does not enqueue a TV command
+PASS: export preview explains local redaction
+PASS: cancel export creates no payload
+PASS: report payload excludes serial and endpoint even in descriptive fields
+PASS: current task completed: 导出兼容报告
+PASS: task queue drained
+PASS: export survives activity replacement and disconnection without mixing reports
+PASS: successful export clears only the pending report
+PASS: cancelled system picker clears pending report
+COMPATIBILITY NATIVE UI PASSED: 19 checks.
+

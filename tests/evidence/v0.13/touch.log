@@ -1,0 +1,108 @@
+PASS: tab touch target stays fixed while pressed: 1/icon
+PASS: physical icon tap selects tab 1
+PASS: visible header agrees with selected tab 1
+PASS: tab touch target stays fixed while pressed: 2/icon
+PASS: physical icon tap selects tab 2
+PASS: visible header agrees with selected tab 2
+PASS: tab touch target stays fixed while pressed: 3/icon
+PASS: physical icon tap selects tab 3
+PASS: visible header agrees with selected tab 3
+PASS: tab touch target stays fixed while pressed: 4/icon
+PASS: physical icon tap selects tab 4
+PASS: visible header agrees with selected tab 4
+PASS: tab touch target stays fixed while pressed: 0/icon
+PASS: physical icon tap selects tab 0
+PASS: visible header agrees with selected tab 0
+PASS: tab touch target stays fixed while pressed: 1/label
+PASS: physical label tap selects tab 1
+PASS: visible header agrees with selected tab 1
+PASS: tab touch target stays fixed while pressed: 2/label
+PASS: physical label tap selects tab 2
+PASS: visible header agrees with selected tab 2
+PASS: tab touch target stays fixed while pressed: 3/label
+PASS: physical label tap selects tab 3
+PASS: visible header agrees with selected tab 3
+PASS: tab touch target stays fixed while pressed: 4/label
+PASS: physical label tap selects tab 4
+PASS: visible header agrees with selected tab 4
+PASS: tab touch target stays fixed while pressed: 0/label
+PASS: physical label tap selects tab 0
+PASS: visible header agrees with selected tab 0
+PASS: tab touch target stays fixed while pressed: 1/padding
+PASS: physical padding tap selects tab 1
+PASS: visible header agrees with selected tab 1
+PASS: tab touch target stays fixed while pressed: 2/padding
+PASS: physical padding tap selects tab 2
+PASS: visible header agrees with selected tab 2
+PASS: tab touch target stays fixed while pressed: 3/padding
+PASS: physical padding tap selects tab 3
+PASS: visible header agrees with selected tab 3
+PASS: tab touch target stays fixed while pressed: 4/padding
+PASS: physical padding tap selects tab 4
+PASS: visible header agrees with selected tab 4
+PASS: tab touch target stays fixed while pressed: 0/padding
+PASS: physical padding tap selects tab 0
+PASS: visible header agrees with selected tab 0
+PASS: tab touch target stays fixed while pressed: 1/edge
+PASS: physical edge tap selects tab 1
+PASS: visible header agrees with selected tab 1
+PASS: tab touch target stays fixed while pressed: 2/edge
+PASS: physical edge tap selects tab 2
+PASS: visible header agrees with selected tab 2
+PASS: tab touch target stays fixed while pressed: 3/edge
+PASS: physical edge tap selects tab 3
+PASS: visible header agrees with selected tab 3
+PASS: tab touch target stays fixed while pressed: 4/edge
+PASS: physical edge tap selects tab 4
+PASS: visible header agrees with selected tab 4
+PASS: tab touch target stays fixed while pressed: 0/edge
+PASS: physical edge tap selects tab 0
+PASS: visible header agrees with selected tab 0
+PASS: tab touch target stays fixed while pressed: 0/icon
+PASS: physical icon tap selects tab 0
+PASS: visible header agrees with selected tab 0
+PASS: physical control has visible bounds
+PASS: real touch opens installation chooser
+PASS: real touch cancels installation chooser
+PASS: tab touch target stays fixed while pressed: 1/icon
+PASS: physical icon tap selects tab 1
+PASS: visible header agrees with selected tab 1
+PASS: physical control has visible bounds
+PASS: real touch opens keyboard input panel
+PASS: physical control has visible bounds
+PASS: real touch collapses keyboard panel
+PASS: physical control has visible bounds
+PASS: real touch opens icon power confirmation
+PASS: real touch cancels standby confirmation
+PASS: physical control has visible bounds
+PASS: real touch activates round HOME control without bypassing connection gate
+PASS: tab touch target stays fixed while pressed: 4/label
+PASS: physical label tap selects tab 4
+PASS: visible header agrees with selected tab 4
+PASS: physical control has visible bounds
+PASS: real touch opens ordinary task button
+PASS: real touch closes task sheet
+PASS: tab touch target stays fixed while pressed: 0/icon
+PASS: physical icon tap selects tab 0
+PASS: visible header agrees with selected tab 0
+PASS: navigation uses a native button with predictable touch focus
+PASS: cancelled navigation gesture does not switch tabs
+PASS: accessibility-style click selects applications
+PASS: tab touch target stays fixed while pressed: 3/icon
+PASS: physical icon tap selects tab 3
+PASS: visible header agrees with selected tab 3
+PASS: reduced-motion navigation works without entry animation
+PASS: tab touch target stays fixed while pressed: 0/label
+PASS: physical label tap selects tab 0
+PASS: visible header agrees with selected tab 0
+PASS: tab touch target stays fixed while pressed: 1/icon
+PASS: physical icon tap selects tab 1
+PASS: visible header agrees with selected tab 1
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+PASS: tab touch target stays fixed while pressed: 0/label
+PASS: physical label tap selects tab 0
+PASS: visible header agrees with selected tab 0
+NATIVE TAB TOUCH PASSED: 103 checks.
+

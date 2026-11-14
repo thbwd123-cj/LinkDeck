@@ -1,0 +1,59 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://github.com/flipperdevices/IRDB/blob/dev/database/categories/TVs/Konka/Konka_90_xm_1_3558/Konka_90_xm_1_3558.ir
+# License: MIT (flipperdevices/IRDB)
+#
+name: DOWN
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 11 00 00 00
+#
+##
+name: UP
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 10 00 00 00
+#
+##
+name: POWER
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 0C 00 00 00
+#
+##
+name: VOL_UP
+type: parsed
+protocol: NEC
+address: 40 00 00 00
+command: 1E 00 00 00
+#
+##
+name: RIGHT
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 13 00 00 00
+#
+##
+name: MENU
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 1D 00 00 00
+#
+##
+name: MUTE
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 50 00 00 00
+#
+##
+name: LEFT
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 12 00 00 00

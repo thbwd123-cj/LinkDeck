@@ -1,0 +1,34 @@
+PASS: upgrade home rendered
+PASS: real ADB connection established
+PASS: connected-device foreground service started
+PASS: root Back keeps live transport in background
+PASS: activity returned to foreground
+PASS: foreground return reuses same connection
+PASS: activity recreation restores service-owned transport
+PASS: activity returned to foreground
+PASS: lost background transport reconnects on return
+PASS: task queue drained
+PASS: application source actions visible
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+PASS: phone picker lists installed test app
+PASS: phone app compatibility inspection
+PASS: current task completed: 安装或更新电视应用
+PASS: task queue drained
+PASS: installed split app inspected as complete set
+PASS: current task completed: 安装或更新电视应用
+PASS: task queue drained
+PASS: real split session install succeeds
+PASS: old-TV version conflict blocks installation
+PASS: old recovery history requires manual review
+PASS: migration identifies weak old ownership
+PASS: cancelled migration leaves old record intact
+PASS: current task completed: 核对旧恢复记录
+PASS: confirmed migration attaches only actual disabled app
+PASS: current task completed: 启用应用
+PASS: migrated app can be restored on the original device
+PASS: task queue drained
+PASS: manual disconnect clears automatic recovery intent
+UPGRADE QA PASSED: 29 checks.
+

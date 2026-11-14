@@ -1,0 +1,52 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://github.com/flipperdevices/IRDB/blob/dev/database/categories/TVs/Haier/Haier_74_xm_1_299/Haier_74_xm_1_299.ir
+# License: MIT (flipperdevices/IRDB)
+#
+name: DOWN
+type: raw
+frequency: 37910
+duty_cycle: 0.330000
+data: 9110 4500 564 623 564 623 564 570 591 596 564 596 564 570 591 570 512 675 564 1730 538 1757 512 675 564 1704 591 1756 485 1810 538 1704 591 596 564 1730 591 596 564 1704 617 1704 564 570 591 570 564 596 564 570 591 596 564 1704 564 596 564 596 564 1704 564 1730 591 1704 591 1704 591 42456 9110 2258 564 98373
+#
+##
+name: UP
+type: parsed
+protocol: NECext
+address: 00 7B 00 00
+command: 0C F3 00 00
+#
+##
+name: POWER
+type: parsed
+protocol: NECext
+address: 00 7B 00 00
+command: 02 FD 00 00
+#
+##
+name: BACK
+type: parsed
+protocol: NECext
+address: 00 7B 00 00
+command: 15 EA 00 00
+#
+##
+name: VOL_UP
+type: parsed
+protocol: NECext
+address: 00 7B 00 00
+command: 12 ED 00 00
+#
+##
+name: MUTE
+type: parsed
+protocol: NECext
+address: 00 7B 00 00
+command: 56 A9 00 00
+#
+##
+name: LEFT
+type: parsed
+protocol: NECext
+address: 00 7B 00 00
+command: 10 EF 00 00

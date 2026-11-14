@@ -1,0 +1,7 @@
+PASS: three actual mDNS service types are registered
+PASS: user discovery completes within its bounded interval
+PASS: system accepts all discovery requests: []
+PASS: discovery sends no control socket connections
+PASS: closing discovery ignores late resolutions and stops scanning
+DISCOVERY LIFECYCLE PASSED (resolution unverified): 5 checks.
+

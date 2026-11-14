@@ -1,0 +1,17 @@
+PASS: physical tap sends exactly one UP key
+PASS: tap release does not add a click duplicate or repeat
+PASS: accessibility click sends one LEFT key
+PASS: held direction repeats through actual ADB transport
+PASS: cancel stops repeating direction
+PASS: accessible remote action sends correct key: 返回
+PASS: accessible remote action sends correct key: 主页
+PASS: accessible remote action sends correct key: 菜单
+PASS: accessible remote action sends correct key: 音量 −
+PASS: accessible remote action sends correct key: 音量 ＋
+PASS: accessible remote action sends correct key: 确定
+PASS: power action requires explicit confirmation
+PASS: cancel power sheet sends no standby key
+PASS: DOWN press reaches transport
+PASS: leaving remote screen stops detached control repeats
+VERSION 011 REMOTE INPUT PASSED: 15 checks.
+

@@ -1,0 +1,8 @@
+PASS: three actual mDNS service types are registered
+PASS: user discovery completes within its bounded interval
+PASS: system accepts all discovery requests: []
+java.lang.AssertionError: native discovery resolves _adb._tcp
+	at cn.linkdeck.qa.Discovery13Checks.check(Discovery13Checks.java:5)
+	at cn.linkdeck.qa.Discovery13Checks.onStart(Discovery13Checks.java:10)
+	at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:2361)
+

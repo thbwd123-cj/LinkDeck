@@ -1,0 +1,18 @@
+PASS: official release metadata resolves pinned APK and checksum
+PASS: actual official APK matches release length and SHA-256
+PASS: non-official APK URL rejected
+PASS: prerelease not offered as stable update
+PASS: corrupted or mismatched checksum blocks installation
+PASS: HTTP and unrelated repository redirects rejected
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+PASS: offline Aerial action requests connection
+PASS: real official APK minimum supports Android 5.1
+PASS: full official APK rejected for Android 4.x
+PASS: downloaded package must be actual Aerial
+PASS: prepared plan distinguishes install support and desktop takeover
+PASS: cancel clears prepared APK
+PASS: manual variant options available
+AERIAL NATIVE QA PASSED: 13 checks.
+

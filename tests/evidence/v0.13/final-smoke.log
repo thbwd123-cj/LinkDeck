@@ -1,0 +1,10 @@
+PASS: final version opens its native dashboard
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+PASS: final wizard offers both transport types
+PASS: final binary connects to real emulator adbd
+PASS: final native snapshot recognizes the actual Android 13 current user
+PASS: final report is displayed
+FINAL 013 NATIVE SMOKE PASSED: 5 checks.
+

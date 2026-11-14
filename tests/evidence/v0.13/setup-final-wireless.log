@@ -1,0 +1,4 @@
+PASS: wireless debugging page opened through developer settings
+PASS: system pairing-code window opened
+WIRELESS SYSTEM UI READY: 2 checks; connectPort=38527; code intentionally not logged.
+

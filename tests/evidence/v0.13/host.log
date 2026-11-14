@@ -1,0 +1,296 @@
+PASS: binary manifest identifies base APK
+PASS: binary manifest identifies standalone split
+PASS: standalone split cannot install alone
+PASS: complete base plus split accepted
+PASS: duplicate split rejected
+PASS: reads split-required boolean
+PASS: required splits missing from base rejected
+PASS: required base with declared split accepted
+PASS: reads uses-split dependency
+PASS: missing declared dependency rejected
+PASS: declared dependency present accepted
+PASS: explains old TV Android incompatibility
+PASS: explains ABI mismatch
+PASS: offline result remains unverified
+PASS: friendly install error preserves raw response
+PASS: TCP reachability never claims ADB authorization
+PASS: closed port report includes raw cause
+PASS: timeout does not assert TV is off
+WORKFLOW LOGIC PASSED: 21 checks.
+PASS: single/split transfer; actual ABI scan across splits; SDK and ABI rejection; session commit/abandon; cleanup on push/write/commit errors; phone source files preserved
+PASS: refused stage, error detail, closed socket, progress
+PASS: eof stage, error detail, closed socket, progress
+PASS: protocol stage, error detail, closed socket, progress
+PASS: tls stage, error detail, closed socket, progress
+PASS: timeout stage, error detail, closed socket, progress
+PASS: cancel stage, error detail, closed socket, progress
+ALL CONNECTION FAILURE CHECKS PASSED
+PASS: legacy shell without printf: actual wrapper executes; empty/multiline/no-newline/comment output, nonzero/exit status; missing/malformed markers fail with raw output
+OLD printf WRAPPER REPRODUCED FAILURE; NEW LEGACY SHELL CHECKS PASSED
+PASS: Android 4.x selects Lite
+PASS: Android 5.0 and user 5.1 select full version
+PASS: unknown SDK cannot guess support
+PASS: Android before 4.0 rejected
+PASS: guard rejected on Android 4.x
+PASS: Lite rejected on Android 5.1
+PASS: unknown download variant rejected
+PASS: parse installed version code independent of 1.73 release name
+PASS: parse installed version name
+PASS: fresh install and update distinguished
+PASS: same and newer installed versions do not auto-update
+PASS: unreadable installed version blocks overwrite
+PASS: Coocaa support does not promise home takeover
+PASS: successful APK install separates desktop takeover
+PASS: installation re-reads actual TV version
+PASS: downgrade blocked before push
+PASS: newer installed version never transferred
+PASS: changed TV version invalidates prepared plan
+PASS: signature/install failure stops without uninstall
+PASS: installer never uninstalls or changes desktop settings
+PASS: pm Success alone cannot claim verified install
+AERIAL POLICY/INSTALLER PASSED: 21 checks.
+PASS: download fallback preserves pinned release digest and size
+PASS: official asset API fallback exercised
+PASS: metadata outage uses documented official website without inventing digest
+PASS: tamper download rejected and partial file removed
+PASS: truncated download rejected and partial file removed
+PASS: oversize download rejected and partial file removed
+PASS: insecure redirect never contacted; official fallback still works
+PASS: unrelated repository and lookalike hostname rejected
+AERIAL DOWNLOAD STATE MACHINE PASSED: 8 checks.
+PASS: legacy Android 5 permission list recognizes granted state
+PASS: legacy Android 5 requested permission is not mistaken for granted
+PASS: complete AOSP package dump recognizes omitted denied install permission
+PASS: truncated dump cannot infer an omitted permission
+PASS: unrecognized permission state remains unknown
+PASS: inspection is read-only
+PASS: legacy Android 5.1 skips automatic default desktop mutation
+PASS: enabled service is not mistaken for bound/running service
+PASS: short and full service names match
+PASS: unrelated bound service cannot claim Aerial is running
+PASS: unknown accessibility dump remains unconfirmed
+PASS: repair grants permission and enables only Aerial guard
+PASS: repair preserves existing accessibility and notification services
+PASS: durable backup records actual changed values only
+PASS: restore revokes only newly granted Aerial permission and guard
+PASS: restore preserves services added after backup
+PASS: restore keeps accessibility enabled for other services
+PASS: verified restore marks transaction complete
+PASS: restore deletes originally absent service key and restores empty-list master switch
+PASS: backup failure aborts before any remote write
+PASS: no remote write when backup cannot be saved
+PASS: ambiguous remote write stops remaining repair steps
+PASS: pending write retained durably for interrupted recovery
+PASS: ambiguous write requires explicit backup disposition
+PASS: preserving uncertain backup never removes the possibly external service
+PASS: different TV identity blocks repair
+PASS: wrong-device validation has no side effects
+PASS: supported default desktop with known previous HOME can be reviewed
+PASS: later user-selected desktop is never overwritten by restore
+PASS: unchanged helper-selected HOME restores the original component
+PASS: permission granted before helper repair is never revoked
+PASS: Xiaomi skips default desktop modification
+PASS: unreadable service list is not replaced
+PASS: explicit missing-package error is handled as not installed
+PASS: export summary excludes address, serial, other services and full system dump
+PASS: foreground parser extracts exact component without window titles
+DESKTOP ENGINE PASSED: 36 checks.
+PASS: Aerial auto-enabling the master switch no longer aborts repair
+PASS: already enabled master switch is not rewritten
+PASS: Aerial's self-enabled service entries are not claimed as helper writes
+PASS: restore keeps external service changes while revoking only helper grant
+PASS: items completed after review are accepted without writes or backup ownership
+PASS: list changed after backup is re-read and merged without losing concurrent services
+PASS: rebased backup restores only the helper-added token
+PASS: external completion during backup is skipped and not offered for rollback
+PASS: skip-only journal cannot accumulate stale entries or block a later real repair
+PASS: concurrent additive service change during read-back is preserved
+PASS: continuous list changes stop after bounded retries without overwrites
+PASS: failed vendor query does not misclassify Coocaa as Xiaomi or enable HOME writes
+PASS: real Android 5.1 label-only bound service format remains unconfirmed
+PASS: explicit Aerial component still confirms bound service
+PASS: mixed identified and legacy service entries do not falsely exclude Aerial
+PASS: service label is never mistaken for component identity
+DESKTOP CONCURRENCY/LEGACY FIX PASSED: 16 checks.
+PASS: final switch reset yields incomplete result and carries actual snapshot
+PASS: reset aborts later selected writes without retry
+PASS: unbound guard stops after exactly three read-only checks
+PASS: runtime verification never repeats master-switch write
+PASS: late guard binding can finish within bounded read-only wait
+PASS: unrecognized binding stays unknown rather than success or stopped
+PASS: new same-version guard compatibility crash aborts repair
+PASS: new crash stops later writes and retains completed backup
+PASS: initial binding is observed long enough to catch a subsequent new crash
+PASS: unchanged historical record does not ban the installed version
+PASS: old 1.74 crash is excluded when installed build is 1.73
+PASS: another app's crash cannot stop Aerial repair
+PASS: unreadable logs remain explicitly unknown even if guard binds
+PASS: identical crash signatures in the same second retain occurrence counts
+PASS: footer changes cannot turn historical crashes into new records
+PASS: truncated matching record never asserts a clean crash log
+PASS: matching process with missing package/version is unknown rather than clean
+PASS: failure before send leaves only prepared record with no rollback ownership
+PASS: legacy pending cannot remove externally added guard or force-stop app
+PASS: explicit keep-current archives unknown record with zero TV writes
+PASS: sent but unverifiable write remains uncertain rather than auto-owned
+PASS: subsequent repair cannot append writes before uncertain backup review
+PASS: binding parser follows explicit current-user block
+PASS: switch to unsupported user blocks every mutation and candidate
+PASS: unknown active user never inherits user-0 repair candidates
+PASS: HOME category must match exact token rather than HOME.CC prefix
+PASS: default-home repair requires Aerial MainActivity among actual HOME candidates
+PASS: restart verification also refuses success without bound guard
+PASS: restart observes foreground over three bounded samples
+PASS: restart cannot succeed if Aerial leaves foreground during observation
+PASS: direct default HOME does not require an unnecessary guard binding
+PASS: report exports sanitized outcome without raw stack or unrelated packages
+DESKTOP VERIFICATION FIX PASSED: 32 checks.
+PASS: old Android metadata accepted
+PASS: command availability is not an observed key effect
+PASS: installer presence does not claim an installation succeeded
+PASS: desktop modifications never automatically certified
+PASS: probe has no writes, key injection or screenshot acquisition
+PASS: explicit successful operation can update its capability
+PASS: default report omits identity and endpoint
+PASS: identifiers inside descriptive fields are also redacted
+PASS: report contains no raw output or exception text
+PASS: definitively missing tools block only their operations
+PASS: permission denied is not declared unsupported
+PASS: interrupted detection does not certify earlier results
+PASS: firmware changes invalidate a mixed snapshot
+PASS: TLS certificate uses the existing ADB key
+PASS: TLS identity persists across process-style reloads
+PASS: modern currentUserId with matching user block is recognized
+PASS: modern header without matching user block remains unknown
+PASS: duplicate current-user headers are rejected
+PASS: contradictory current-user markers are rejected
+PASS: old and modern current-user disagreement stops changes
+PASS: read-only APK path lookup is not gated by installation permissions
+PASS: peer verification occurs after CNXN and before connected state
+PASS: unapproved encrypted transport sends no command OPEN
+COMPATIBILITY CORE PASSED: 23 checks.
+PASS: recovery scope is stable
+PASS: ports cannot share recovery records
+PASS: replacement device has a separate recovery scope
+PASS: firmware changes are not silently migrated
+PASS: unknown serial cannot auto-attribute recovery
+PASS: same-transport install can use firmware identity
+PASS: compatible update accepted
+PASS: explicit same-version replacement accepted
+PASS: versionCode zero first install accepted
+PASS: expected package mismatch rejected
+PASS: signer mismatch cannot replace current app
+PASS: generic downgrade is blocked
+PASS: unknown installed version is not treated as absence
+PASS: Android 5.1 minimum-SDK conflict rejected
+PASS: ABI conflict rejected
+PASS: unknown device capabilities rejected
+PASS: valid package accepted
+PASS: shell-like package input rejected
+PASS: legacy exit-1 absence confirmed against listing
+PASS: permission error is never absence
+PASS: listed package with unreadable path stops update
+PASS: TV launcher attempted before ordinary launcher
+PASS: launcher package cannot inject shell text
+UPGRADE CORE PASSED: 23 checks.
+PASS: manual stable marking enables per-TV hold with explicit provenance
+PASS: known version requires exact code and APK fingerprint
+PASS: same version with different APK stays unverified
+PASS: profiles do not leak across TVs or full/Lite packages
+PASS: run confirmation is mandatory
+PASS: physical HOME confirmation is mandatory
+PASS: invalid installed fingerprint cannot be marked stable
+PASS: unknown profile schema is not overwritten
+PASS: held unverified install is blocked before transfer
+PASS: explicit override allows one reviewed plan without changing hold
+PASS: one-install override does not globally unlock profile
+PASS: missing hold field cannot silently unlock corrupted record
+PASS: multiple base APK paths fail closed
+PASS: profile revision changes invalidate prepared installation
+PASS: explicitly resumed evaluation allows user-reviewed update
+PASS: serialized stable profile round-trips without losing proof
+PASS: numeric official release tag is normalized
+PASS: release tag path injection rejected
+PASS: release tag query injection rejected
+PASS: fixed release never keeps current-website mirror
+PASS: mismatched selected and returned release tags rejected
+PASS: fixed release cannot silently redirect metadata to latest tag
+PASS: catalog filters draft/prerelease/wrong asset and deduplicates tags
+PASS: full APK version must match selected official tag
+PASS: installed split package uses explicit base APK for signature proof
+PASS: ambiguous installed base path rejected
+PASS: matching signing certificates accepted
+PASS: changed signer blocked before update or rollback
+PASS: default installer still refuses implicit downgrade
+PASS: implicit downgrade is rejected before transmission
+PASS: explicit downgrade uses preserving flags and verifies final version
+PASS: downgrade never falls back to uninstall or clearing data
+PASS: system downgrade denial is explicit and does not claim successful rollback
+PASS: downgrade denial has no destructive fallback
+PASS: installed version changes invalidate rollback consent
+PASS: success text without matching final version cannot pass rollback
+AERIAL VERSION MANAGEMENT PASSED: 36 checks.
+PASS: Android 5 properties fall back to abi and abi2
+PASS: missing optional serial does not block reliable model/fingerprint identity
+PASS: preflight never sends failing optional single-property queries
+PASS: complete ABI list takes precedence
+PASS: required property missing blocks installation: ro.build.version.sdk
+PASS: required property missing blocks installation: ro.build.fingerprint
+PASS: required property missing blocks installation: ro.product.model
+PASS: required property missing blocks installation: ro.product.cpu.abi
+PASS: conflicting property snapshots are not guessed
+PASS: malformed reported ABI list cannot be silently replaced
+PASS: empty exit 1 means absent only after independent package-list verification
+PASS: empty exit 0 is also independently verified
+PASS: known installed APK path does not trigger unnecessary full listing
+PASS: installed package with unreadable path is never treated as absent
+PASS: unrecognized package inventory cannot prove absence
+PASS: unrecognized package inventory cannot prove absence
+PASS: unrecognized package inventory cannot prove absence
+PASS: permission failure is never normalized to uninstalled
+PASS: permission failure does not trigger an absence fallback
+PASS: failure names the actual command and empty return rather than generic exit 1
+PASS: complete multiline output and whitespace are preserved in detailed error
+PASS: transport uncertainty keeps command/output and never becomes a false completion
+PASS: unexpected exit code is not accepted as absence
+PASS: unexpected exit code performs no follow-up or write
+PASS: special package lookup restricted to Aerial
+PASS: recovery queries stay strictly read-only
+AERIAL PREFLIGHT FIX PASSED: 26 checks.
+PASS: one capture performs three bounded observations and yields scoped normal state
+PASS: diagnostic capture performs zero TV mutations or app starts
+PASS: fault report excludes endpoint, serial and other service lists
+PASS: new matching crash is routed to application fault rather than missing permissions
+PASS: crash report preserves useful category without arbitrary crash messages or raw stack
+PASS: historical unchanged crash does not label current observation as newly crashing
+PASS: known disabled guard routes to concrete configuration state
+PASS: configured but unbound guard remains diagnostic uncertainty
+PASS: unreadable crash source never produces clean health verdict
+PASS: disconnect preserves first observation and produces partial result
+PASS: connection exception cannot leak endpoint into exported report
+PASS: capture cannot combine observations across installed version changes
+PASS: confirmed direct HOME does not require optional guard setup
+PASS: Lite does not get a false full-guard missing diagnosis
+PASS: initial failure still yields exportable partial report
+ONE-CLICK DIAGNOSTICS PASSED: 15 checks.
+PASS: fixed release download uses selected immutable route
+PASS: pinned resource outage removes partial file and explains fixed-version failure
+PASS: historical APK failure never falls back to current website or latest release
+PINNED DOWNLOAD PASSED: 3 checks.
+PASS: partial preserves uncertainty/output, bounded deadline and next command works
+PASS: silent preserves uncertainty/output, bounded deadline and next command works
+PASS: stream preserves uncertainty/output, bounded deadline and next command works
+PASS: ack preserves uncertainty/output, bounded deadline and next command works
+SHELL TIMEOUT CHECKS PASSED: 4 scenarios
+PASS: AUTH, key persistence, shell, nonzero exit, channel multiplexing, sync push/list/pull, UTF-8, binary integrity, permission error, screenshot, shell quoting
+PASS: AUTH, key persistence, shell, nonzero exit, channel multiplexing, sync push/list/pull, UTF-8, binary integrity, permission error, screenshot, shell quoting
+PASS: invalid checksum rejected
+ALL PROTOCOL TESTS PASSED (including reconnect with persisted keys).
+PASS: old strict path reproduces screenshot's empty exit-1 error: pm path app.orchard.tv
+PASS: old strict path reproduces screenshot's empty exit-1 error: getprop ro.product.cpu.abilist
+PASS: new property snapshot succeeds over real legacy ADB socket
+PASS: fresh/full installation can be evaluated after confirmed absence
+PASS: installed package still reads its real version through the same adapter
+PASS: real returned permission failure preserves command/status/output
+AERIAL LEGACY PREFLIGHT SOCKET PASSED: 6 checks.
+UNIFIED HOST CHECKS PASSED

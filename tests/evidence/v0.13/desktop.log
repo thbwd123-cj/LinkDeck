@@ -1,0 +1,13 @@
+PASS: uncertain backup opens its own review dialog
+PASS: review explains uncertainty instead of claiming helper ownership
+s_glBindAttribLocation: bind attrib 0 name position
+s_glBindAttribLocation: bind attrib 1 name color
+s_glBindAttribLocation: bind attrib 2 name localCoord
+PASS: cancel retains old pending backup unchanged
+PASS: incomplete repair shows failure rather than success
+PASS: incomplete repair persists actual outcome for export
+PASS: cached panel snapshot is refreshed on verification failure
+PASS: task history records incomplete repair as unsuccessful
+PASS: panel exposes final incomplete result
+DESKTOP FIX NATIVE UI PASSED: 8 checks.
+

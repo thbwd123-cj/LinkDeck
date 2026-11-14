@@ -1,0 +1,59 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://github.com/flipperdevices/IRDB/blob/dev/database/categories/TVs/TCL/TCL_28_xm_1_3800/TCL_28_xm_1_3800.ir
+# License: MIT (flipperdevices/IRDB)
+#
+name: DOWN
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 13 00 00 00
+#
+##
+name: UP
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 12 00 00 00
+#
+##
+name: POWER
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 0F 00 00 00
+#
+##
+name: OK
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 19 00 00 00
+#
+##
+name: VOL_UP
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 10 00 00 00
+#
+##
+name: MENU
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 15 00 00 00
+#
+##
+name: MUTE
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 1D 00 00 00
+#
+##
+name: LEFT
+type: parsed
+protocol: Samsung32
+address: 0E 00 00 00
+command: 11 00 00 00

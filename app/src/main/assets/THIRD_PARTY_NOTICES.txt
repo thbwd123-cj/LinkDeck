@@ -1,0 +1,25 @@
+LightDeck/轻连 0.19.2 third-party components
+
+Conscrypt Android 2.5.3 — The Conscrypt Authors / Google, Apache License 2.0; includes BoringSSL notices supplied in Conscrypt-NOTICE.txt.
+Source: https://github.com/google/conscrypt/tree/2.5.3
+Artifact: https://repo.maven.apache.org/maven2/org/conscrypt/conscrypt-android/2.5.3/
+SHA-256 AAR: 551ae4e301c571760d1791e647db6ed1dcb10d34dcae7aa12b67f220f2ce98d1
+
+spake2-java Android native backend 2.2.1 — Copyright (C) 2021 Muntashir Al-Islam, LGPL version 3. JNI binding sources and per-file upstream notices are included unmodified under third_party/spake2/src; corresponding JNI/C/CMake sources, including the pinned spake2-c submodule, are under third_party/spake2/upstream. The full application source, build instructions, and original personal-test signing configuration are supplied with the source distribution so recipients may rebuild and relink a modified library. Native C files retain their additional copyright and license notices. The separate experimental pure-Java backend is not used.
+Source: https://github.com/MuntashirAkon/spake2-java/tree/2.2.1
+
+The ADB pairing protocol follows the Android Open Source Project (Apache-2.0); protocol handling was informed by libadb-android 3.1.1 (dual Apache-2.0/GPL-3.0-or-later; Apache-2.0 option selected for reference). LightDeck's transport, certificate generation and JCA pairing framing are implemented in its source tree.
+Protocol: https://android.googlesource.com/platform/packages/modules/adb/
+Reference: https://github.com/MuntashirAkon/libadb-android/tree/3.1.1
+
+The application code license has not been specified; component licenses apply to their respective components. No device private keys, pairing codes, or user device records are included in this distribution.
+
+Flipper-IRDB remote profiles (selected model files), CC0 1.0.
+Source: https://github.com/UberGuidoZ/Flipper-IRDB
+License: licenses/Flipper-IRDB-CC0-1.0.txt
+Every bundled profile also records its original file path.
+
+Flipper official IRDB TV profiles (selected source files), MIT.
+Source: https://github.com/flipperdevices/IRDB
+License: licenses/Flipper-Official-IRDB-MIT.txt
+Each bundled .ir profile records its original source path and license.

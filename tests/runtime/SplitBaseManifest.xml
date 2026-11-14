@@ -1,0 +1,1 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="cn.linkdeck.splitqa" android:versionCode="1" android:versionName="1"><uses-sdk android:minSdkVersion="21" android:targetSdkVersion="28"/><application android:hasCode="false" android:label="轻连分包测试"/></manifest>
