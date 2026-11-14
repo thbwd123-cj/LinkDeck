@@ -9,8 +9,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--toolchain', type=Path, default=ROOT / '.toolchain')
 args = parser.parse_args()
 tc = args.toolchain.resolve()
-bt = tc / 'build-tools/android-15'
-android = tc / 'platform/android-35/android.jar'
+bt = tc / 'build-tools-36/android-16'
+android = tc / 'platform/android-36/android.jar'
 out = ROOT / 'build/runtime-qa'
 sources = ROOT / 'tests/runtime'
 for name in ['classes', 'dex']:

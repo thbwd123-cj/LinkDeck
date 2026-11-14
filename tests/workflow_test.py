@@ -2,7 +2,7 @@
 from pathlib import Path
 import subprocess
 r=Path(__file__).resolve().parents[1]
-tc=r/'.toolchain'; bt=tc/'build-tools/android-15'; out=r/'build/workflow-fixtures'; classes=r/'build/test-classes'
+tc=r/'.toolchain'; bt=tc/'build-tools-36/android-16'; out=r/'build/workflow-fixtures'; classes=r/'build/test-classes'
 out.mkdir(parents=True,exist_ok=True);classes.mkdir(parents=True,exist_ok=True)
 def run(*args,**kwargs):
     command=Path(str(args[0]))
@@ -11,7 +11,7 @@ def run(*args,**kwargs):
 base=(r/'tests/runtime/SplitBaseManifest.xml').read_text();part=(r/'tests/runtime/SplitPartManifest.xml').read_text()
 for name,xml in [('base',base),('split',part),('required',base.replace('<application ','<application android:isSplitRequired="true" ')),('dependent',part.replace('split="config.qa"','split="feature.extra"').replace('<application ','<uses-split android:name="config.qa"/><application '))]:
     manifest=out/(name+'.xml');manifest.write_text(xml)
-    run(bt/'aapt2','link','-o',out/(name+'.apk'),'-I',tc/'platform/android-35/android.jar','--manifest',manifest)
+    run(bt/'aapt2','link','-o',out/(name+'.apk'),'-I',tc/'platform/android-36/android.jar','--manifest',manifest)
 src=r/'app/src/main/java/cn/linkdeck/adb'
 run('java','-jar',tc/'ecj.jar','-8','-nowarn','-encoding','UTF-8','-d',classes,*[src/(n+'.java') for n in ['AdbIdentity','AdbClient','ApkTransfer','ApkManifest','ConnectionDiagnostic','DisplayState']],*[r/'tests'/(n+'.java') for n in ['WorkflowChecks','ApkTransferChecks','ConnectionChecks','LegacyShellChecks','ClientIntegration']])
 run('java','-cp',classes,'cn.linkdeck.adb.WorkflowChecks',out)

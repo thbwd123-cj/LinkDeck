@@ -6,7 +6,7 @@ Usage: python3 build.py [--toolchain /path/to/existing/toolchain]
 import argparse, hashlib, os, pathlib, shutil, subprocess, urllib.request, zipfile, re
 
 ROOT=pathlib.Path(__file__).resolve().parent
-VERSION='0.19.2'
+VERSION='0.19.3'
 assert re.search(r'NAME = \"'+re.escape(VERSION)+r'\"', (ROOT/'app/src/main/java/cn/linkdeck/adb/AppVersion.java').read_text()), 'UI/report version differs from APK version'
 parser=argparse.ArgumentParser();parser.add_argument('--toolchain',type=pathlib.Path,default=ROOT/'.toolchain');parser.add_argument('--release-keystore',type=pathlib.Path);parser.add_argument('--release-alias',default='linkdeck');parser.add_argument('--storepass-env',default='LINKDECK_STORE_PASSWORD');parser.add_argument('--keypass-env',default='LINKDECK_KEY_PASSWORD');args=parser.parse_args()
 TC=args.toolchain.resolve();TC.mkdir(parents=True,exist_ok=True)
@@ -22,10 +22,10 @@ def sdk(archive,dest,expected):
     if not expected.exists():
         path=TC/archive;fetch('https://dl.google.com/android/repository/'+archive,path)
         with zipfile.ZipFile(path) as z:z.extractall(dest)
-sdk('platform-35_r02.zip',TC/'platform',TC/'platform/android-35/android.jar')
-sdk('build-tools_r35_linux.zip',TC/'build-tools',TC/'build-tools/android-15/lib/d8.jar')
+sdk('platform-36_r02.zip',TC/'platform',TC/'platform/android-36/android.jar')
+sdk('build-tools_r36_linux.zip',TC/'build-tools-36',TC/'build-tools-36/android-16/lib/d8.jar')
 fetch('https://repo.maven.apache.org/maven2/org/eclipse/jdt/ecj/3.33.0/ecj-3.33.0.jar',TC/'ecj.jar')
-BT=TC/'build-tools/android-15';ANDROID=TC/'platform/android-35/android.jar'
+BT=TC/'build-tools-36/android-16';ANDROID=TC/'platform/android-36/android.jar'
 R8=TC/'r8-8.6.27.jar'
 fetch('https://storage.googleapis.com/r8-releases/raw/8.6.27/r8.jar',R8)
 if hashlib.sha256(R8.read_bytes()).hexdigest()!='fe1e15d8d1dd2cdb43d6d62c6982534466439d5c1a68889a3aa4acf8a944393f':raise RuntimeError('R8/D8 8.6.27 checksum mismatch')
@@ -55,7 +55,7 @@ with zipfile.ZipFile(BUILD/'classes.jar','w') as z:
     for p in (BUILD/'classes').rglob('*.class'):z.write(p,p.relative_to(BUILD/'classes'))
 run(JAVA,'-cp',R8,'com.android.tools.r8.D8','--release','--min-api','26','--lib',ANDROID,'--output',BUILD/'dex',BUILD/'classes.jar',CONSCRYPT,SPAKE)
 run(BT/'aapt2','compile','--dir',ROOT/'app/src/main/res','-o',BUILD/'resources.zip')
-run(BT/'aapt2','link','-o',BUILD/'unsigned.apk','-I',ANDROID,'--manifest',ROOT/'app/src/main/AndroidManifest.xml','--version-code','50','--version-name',VERSION,'-A',ROOT/'app/src/main/assets',BUILD/'resources.zip')
+run(BT/'aapt2','link','-o',BUILD/'unsigned.apk','-I',ANDROID,'--manifest',ROOT/'app/src/main/AndroidManifest.xml','--version-code','51','--version-name',VERSION,'-A',ROOT/'app/src/main/assets',BUILD/'resources.zip')
 with zipfile.ZipFile(BUILD/'unsigned.apk','a',compression=zipfile.ZIP_DEFLATED) as z:
     for p in (BUILD/'dex').glob('*.dex'):z.write(p,p.name)
     for p in (ROOT/'third_party/conscrypt/jni').rglob('*.so'):z.write(p,'lib/'+str(p.relative_to(ROOT/'third_party/conscrypt/jni')))

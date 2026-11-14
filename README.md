@@ -1,6 +1,6 @@
 # 轻连 LinkDeck
 
-轻连是一款 Android 手机端工具，用于连接支持 ADB 的 Android 电视或电视盒子。当前源码对应 **0.19.2（versionCode 50）**。手机需要 Android 8.0 及以上；电视兼容性取决于系统、厂商固件和授权情况。
+轻连是一款 Android 手机端工具，用于连接支持 ADB 的 Android 电视或电视盒子。当前源码对应 **0.19.3（versionCode 51）**。手机需要 Android 8.0 及以上；电视兼容性取决于系统、厂商固件和授权情况。
 
 ## 功能
 
@@ -9,7 +9,7 @@
 - 电视应用列表、安装和已收录来源的更新检查，文件传输与命令输出。
 - Aerial TV 桌面管理、版本回退及诊断；实际权限和兼容性因设备而异。
 
-USB OTG 直连尚未实现。连接向导中的品牌菜单是示意，不能保证适配同品牌全部型号。自动更新只支持已配置、可核验的来源，并非全网任意应用。真实手机和电视上的验证情况见 [本版变更与测试说明](CHANGELOG-0.19.2.md)。
+USB OTG 直连尚未实现。连接向导中的品牌菜单是示意，不能保证适配同品牌全部型号。自动更新只支持已配置、可核验的来源，并非全网任意应用。真实手机和电视上的验证情况见 [本版变更与测试说明](CHANGELOG-0.19.3.md)。
 
 ## 工程结构
 
@@ -19,7 +19,7 @@ USB OTG 直连尚未实现。连接向导中的品牌菜单是示意，不能保
 - `tests/`：主机侧测试及部分 Android 运行测试源码。
 - `build.py`：无需 Gradle 的构建脚本；`package_source.py` 用于项目内部源码打包。
 
-此工程**不是 Gradle 工程**。需要 Python 3、Java 17 或更高版本、`keytool` 及可用网络；首次构建会下载 Android 35 平台、Android 构建工具、ECJ 和 D8 8.6.27。部分测试还需下载 JSON 依赖。D8 及特定第三方依赖有固定 SHA-256 检查，其他构建工具的获取方式见 `build.py`。
+此工程**不是 Gradle 工程**。需要 Python 3、Java 17 或更高版本、`keytool` 及可用网络；首次构建会下载 Android 36 平台、Android 构建工具、ECJ 和 D8 8.6.27。部分测试还需下载 JSON 依赖。D8 及特定第三方依赖有固定 SHA-256 检查，其他构建工具的获取方式见 `build.py`。
 
 ## 构建 APK
 
@@ -55,4 +55,4 @@ GitHub 网页上传大量文件可能需要分批；也可在电脑上通过 Git
 
 ## 许可
 
-项目自身的开源许可证尚未在仓库中指定，请权利人自行决定后添加；公开代码本身不等于授予开源许可。第三方组件各自的许可和声明见 `app/src/main/assets/THIRD_PARTY_NOTICES.txt`、`app/src/main/assets/licenses/` 及 `third_party/`。
+项目自身使用 Apache License 2.0，许可证文本见仓库根目录的 `LICENSE` 文件。第三方组件各自的许可和声明见 `app/src/main/assets/THIRD_PARTY_NOTICES.txt`、`app/src/main/assets/licenses/` 及 `third_party/`。
