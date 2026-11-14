@@ -1,4 +1,4 @@
-LightDeck/轻连 0.19.3 third-party components
+LightDeck/轻连 0.19.4 third-party components
 
 Conscrypt Android 2.5.3 — The Conscrypt Authors / Google, Apache License 2.0; includes BoringSSL notices supplied in Conscrypt-NOTICE.txt.
 Source: https://github.com/google/conscrypt/tree/2.5.3
