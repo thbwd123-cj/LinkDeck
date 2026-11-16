@@ -1,6 +1,0 @@
-轻连候选数据为自行整理，不包含或复制其他软件项目的清单文件。
-包名与应用用途依据：
-1. K米产品固件说明中列出的电视应用包名：https://help-sydc.ktvme.com/versionlist.html
-2. Netflix 官方 Google Play 页面：https://play.google.com/store/apps/details?id=com.netflix.ninja
-3. Spotify 官方 Google Play 页面：https://play.google.com/store/apps/details?id=com.spotify.tv.android
-对应电视的预装状态、组件角色与恢复能力需由轻连现场检查。名单是可选候选，并非建议卸载，也不能保证厂商固件不依赖其中应用。
