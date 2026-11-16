@@ -1,0 +1,24 @@
+<resources>
+ <style name="PaletteTheme2" parent="android:style/Theme.Material.NoActionBar">
+  <item name="android:fontFamily">sans</item><item name="android:colorAccent">#E1C0F5</item>
+  <item name="android:textColorPrimary">#FAF2FF</item><item name="android:textColorSecondary">#C0ACCC</item>
+  <item name="android:windowLightStatusBar">false</item><item name="android:statusBarColor">#1A0E21</item>
+  <item name="android:navigationBarColor">#1A0E21</item><item name="android:windowLightNavigationBar">false</item>
+  <item name="android:windowActionModeOverlay">true</item><item name="android:windowBackground">#1A0E21</item>
+  <item name="android:alertDialogTheme">@style/PaletteDialog2</item><item name="android:colorControlNormal">#C0ACCC</item>
+ </style>
+ <style name="PaletteDialog2" parent="android:style/Theme.Material.Dialog.Alert">
+  <item name="android:windowBackground">@drawable/soft_dialog_background_p2</item><item name="android:colorAccent">#E1C0F5</item>
+  <item name="android:textColorPrimary">#FAF2FF</item><item name="android:textColorSecondary">#C0ACCC</item>
+  <item name="android:fontFamily">sans</item><item name="android:backgroundDimAmount">0.56</item>
+  <item name="android:windowAnimationStyle">@style/PaletteMotion2</item>
+  <item name="android:windowMinWidthMajor">94%</item><item name="android:windowMinWidthMinor">94%</item>
+  <item name="android:buttonBarPositiveButtonStyle">@style/PalettePositive2</item><item name="android:buttonBarNegativeButtonStyle">@style/PaletteSecondary2</item><item name="android:buttonBarNeutralButtonStyle">@style/PaletteSecondary2</item>
+ </style>
+ <style name="PalettePositive2" parent="android:style/Widget.Material.Button.Borderless">
+  <item name="android:stateListAnimator">@animator/deck_button_press</item><item name="android:background">@drawable/soft_action_p2</item><item name="android:textColor">#311D3D</item>
+  <item name="android:minHeight">44dp</item><item name="android:minWidth">88dp</item><item name="android:paddingLeft">16dp</item><item name="android:paddingRight">16dp</item>
+ </style>
+ <style name="PaletteSecondary2" parent="PalettePositive2"><item name="android:background">@drawable/soft_secondary_p2</item><item name="android:textColor">#FAF1FF</item></style>
+ <style name="PaletteMotion2"><item name="android:windowEnterAnimation">@anim/soft_dialog_enter</item><item name="android:windowExitAnimation">@anim/soft_dialog_exit</item></style>
+</resources>
