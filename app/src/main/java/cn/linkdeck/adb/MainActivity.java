@@ -1723,7 +1723,7 @@ public class MainActivity extends Activity {
     addButton(install,"检查已收录应用更新",true,()->scanInstalledUpdates());
     pair(install, "选择手机应用", () -> {installExpectedPackage=null;phoneApps();}, "安装 APK", () -> {installExpectedPackage=null;pick(100);});
     install.addView(text("仅核对已验证的官方来源；其他应用请手动选择 APK。安装前检查版本、签名与电视兼容性。",12,MUTED));
-    addButton(install,"去臃肿",false,()->debloatOpen());
+    addButton(install,"一键清理",false,()->cleanCache());
     aerialEntry(body);
     LinearLayout c = card(body);
     LinearLayout heading = row();
@@ -2138,9 +2138,14 @@ public class MainActivity extends Activity {
                     a.pkg + "\n账号、设置和本地数据可能丢失。恢复中心不能恢复已清除的数据。",
                     () -> command("清除应用数据", "pm clear " + AdbClient.quote(a.pkg), null));
               else if (w == 4)
-                new DeckDialogBuilder(this).setTitle("逐项安全卸载")
-                    .setMessage("为保护电视关键组件，卸载入口已统一到去臃肿清单。请在清单中自行勾选并逐项确认；不在清单中的应用不会通过此入口卸载。")
-                    .setNegativeButton("取消",null).setPositiveButton("打开去臃肿",(x,y)->debloatOpen()).show();
+                confirm(
+                    "为当前用户卸载",
+                    a.pkg + "\n应用数据可能丢失。系统应用只尝试从用户 0 卸载；部分旧系统不支持。卸载不提供一键恢复。",
+                    () ->
+                        command(
+                            "卸载应用",
+                            "pm uninstall --user 0 " + AdbClient.quote(a.pkg),
+                            () -> loadApps()));
               else if (w == 5) command("包详情", "dumpsys package " + AdbClient.quote(a.pkg), null);
               else if(w==6) toggleFavorite(a);
               else if(w==7)chooseInstall(a.pkg);
@@ -2148,95 +2153,6 @@ public class MainActivity extends Activity {
               else githubUpdate(a);
             })
         .show();
-  }
-
-  private String debloatRecordKey() throws IOException {
-    return DebloatIdentity.key(properties.get("ro.serialno"),properties.get("ro.product.model"));
-  }
-
-  private DebloatEngine.Ledger debloatLedger(String key){
-    return new DebloatEngine.Ledger(){
-      public synchronized boolean contains(String pkg){return prefs.getStringSet(key,Collections.emptySet()).contains(pkg);}
-      private synchronized void change(String pkg,boolean add)throws IOException{
-        Set<String> current=new HashSet<>(prefs.getStringSet(key,Collections.emptySet()));
-        if(add)current.add(pkg);else current.remove(pkg);
-        if(!prefs.edit().putStringSet(key,current).commit())throw new IOException("本机恢复记录写入失败，操作已停止或状态需复查");
-      }
-      public void remember(String pkg)throws IOException{change(pkg,true);}
-      public void forget(String pkg)throws IOException{change(pkg,false);}
-    };
-  }
-
-  private DebloatCatalog debloatCatalog()throws Exception{
-    try(InputStream in=getAssets().open("debloat_catalog.json")){return DebloatCatalog.read(in);}
-  }
-
-  private DebloatEngine debloatEngine(DebloatCatalog catalog,AdbClient client,String key){
-    return new DebloatEngine(catalog,command->{
-      if(client!=adb||!client.isConnected())throw new IOException("电视连接已变化，操作结果需重新核对");
-      try{AdbClient.Result result=client.shell(command);return new DebloatEngine.Reply(result.exitCode,result.raw);}
-      catch(AdbClient.ShellFailure failure){throw new IOException(failure.getMessage()+"\n电视已返回：\n"+failure.raw,failure);}
-    },debloatLedger(key));
-  }
-
-  private void debloatOpen(){
-    if(!requestConnection())return;
-    final DebloatCatalog catalog;final String scope;final AdbClient client=adb;
-    try{catalog=debloatCatalog();scope=debloatRecordKey();}
-    catch(Exception e){dialog("去臃肿暂不可用",message(e));return;}
-    final DebloatEngine.Snapshot[] snapshot={null};
-    run("读取去臃肿清单",()->{snapshot[0]=debloatEngine(catalog,client,scope).scan();return "";},()->showDebloat(catalog,client,scope,snapshot[0]));
-  }
-
-  private void showDebloatOutcome(String title,DebloatEngine.Outcome result){
-    new DeckDialogBuilder(this).setTitle(title).setMessage(result.summary+(result.raw.isEmpty()?"":"\n\n电视原始返回：\n"+result.raw))
-      .setNegativeButton("关闭",null).setPositiveButton("返回去臃肿",(d,w)->debloatOpen()).show();
-  }
-
-  private void showDebloat(DebloatCatalog catalog,AdbClient client,String scope,DebloatEngine.Snapshot snapshot){
-    if(snapshot==null||client!=adb||!connected())return;
-    LinearLayout panel=column();panel.setPadding(dp(18),dp(8),dp(18),dp(8));
-    panel.addView(text("仅显示已安装的预装候选；应用是否需要由你决定。每次只处理一项。系统分区、关键组件和恢复能力会在卸载前复核；不同固件可能拒绝操作。",12,MUTED));
-    gap(panel,10);panel.addView(text("可选候选",16,INK));int shown=0;
-    final AlertDialog[] modal={null};
-    for(DebloatCatalog.Entry entry:catalog.entries()){
-      if(!snapshot.installed.contains(entry.pkg)||!snapshot.system.contains(entry.pkg))continue;shown++;
-      LinearLayout row=column();row.setPadding(dp(8),dp(8),dp(8),dp(8));row.setBackground(shape(0xff1c3040,12));
-      CheckBox choice=new CheckBox(this);choice.setText(entry.name+"\n"+entry.pkg+"\n"+entry.description);choice.setTextColor(INK);choice.setTextSize(13);choice.setChecked(false);choice.setContentDescription(entry.name+"，"+entry.pkg+"，预装候选，未选择。"+entry.description);
-      choice.setOnCheckedChangeListener((button,checked)->choice.setContentDescription(entry.name+"，"+entry.pkg+"，预装候选，"+(checked?"已选择":"未选择")+"。"+entry.description));row.addView(choice);
-      TextView remove=button("卸载此项",false,()->{
-        if(!choice.isChecked()){toast("请先勾选该应用");return;}
-        if(!requestConnection()||client!=adb)return;
-        new DeckDialogBuilder(this).setTitle("确认卸载 "+entry.name).setMessage("应用："+entry.name+"\n包名："+entry.pkg+"\n\n仅尝试为用户 0 卸载并请求保留数据；卸载后可在下方恢复。电视必须保留安装文件并支持恢复命令，恢复仍可能失败。卸载可能影响此应用和电视推荐入口。\n\n将再次核对核心组件、预装路径和恢复能力。")
-          .setNegativeButton("取消",null).setPositiveButton("确认卸载",(d,w)->{
-            final DebloatEngine.Outcome[] result={null};
-            run("去臃肿卸载",()->{if(!scope.equals(debloatRecordKey()))throw new IOException("电视身份变化，未执行");result[0]=debloatEngine(catalog,client,scope).uninstall(entry.pkg);return "";},()->{
-              if(modal[0]!=null)modal[0].dismiss();appLoaded=false;showDebloatOutcome("卸载复查",result[0]);
-            });
-          }).show();
-      });remove.setContentDescription("卸载 "+entry.name+"，需要先勾选并再次确认");row.addView(remove);gap(panel,8);panel.addView(row);
-    }
-    if(shown==0){gap(panel,6);panel.addView(text("未发现已安装的清单候选。此结果不代表电视没有其他预装应用。",13,MUTED));}
-    gap(panel,18);panel.addView(text("已卸载与恢复",16,INK));
-    Set<String> records=new TreeSet<>(prefs.getStringSet(scope,Collections.emptySet()));int absent=0;
-    for(String pkg:records){
-      if(snapshot.installed.contains(pkg))continue;absent++;DebloatCatalog.Entry entry=catalog.get(pkg);
-      LinearLayout row=column();row.setPadding(dp(8),dp(8),dp(8),dp(8));row.setBackground(shape(0xff1c3040,12));
-      String name=entry==null?pkg:entry.name;
-      TextView description=text(name+"\n"+pkg+"\n用户 0 未安装；可尝试恢复",13,INK);description.setContentDescription(name+"，"+pkg+"，用户 0 未安装，可尝试恢复");row.addView(description);
-      TextView restore=button("恢复此项",false,()->{
-        if(!requestConnection()||client!=adb)return;
-        final DebloatEngine.Outcome[] result={null};
-        run("去臃肿恢复",()->{if(!scope.equals(debloatRecordKey()))throw new IOException("电视身份变化，未执行");result[0]=debloatEngine(catalog,client,scope).restore(pkg);return "";},()->{
-          if(modal[0]!=null)modal[0].dismiss();appLoaded=false;showDebloatOutcome("恢复复查",result[0]);
-        });
-      });restore.setContentDescription("恢复 "+name+"，"+pkg);if(entry==null){restore.setEnabled(false);restore.setContentDescription(name+"不在当前候选清单中，自动恢复不可用");}row.addView(restore);gap(panel,8);panel.addView(row);
-    }
-    if(absent==0){gap(panel,6);panel.addView(text("这台电视暂无待恢复的去臃肿记录。",13,MUTED));}
-    gap(panel,10);panel.addView(text("恢复记录保存在本机，并按电视序列号和型号区分；清除轻连数据或更换手机会丢失记录。预装安装文件通常仍占系统分区空间，恢复功能取决于电视固件。",12,MUTED));
-    ScrollView scroll=new ScrollView(this);scroll.addView(panel);
-    modal[0]=new DeckDialogBuilder(this).setTitle("去臃肿 · 逐项处理").setView(scroll).setNegativeButton("关闭",null).setNeutralButton("刷新状态",(d,w)->debloatOpen()).create();
-    modal[0].show();modal[0].getWindow().setLayout(Math.min(getResources().getDisplayMetrics().widthPixels-dp(20),dp(600)),(int)(getResources().getDisplayMetrics().heightPixels*.85));
   }
 
   private static final class CommandFailure extends IOException {
@@ -3584,8 +3500,9 @@ public class MainActivity extends Activity {
   private void tools() {
     pageIntro("工具箱", "常用操作随手用，命令与记录随时查。");
     LinearLayout cleanup=card(body);
-    section(cleanup,"存储管理","查看电视空间。清理应用缓存需在电视设置中确认。");
+    section(cleanup,"存储管理","查看电视空间，或请求系统清理应用缓存。");
     pair(cleanup,"查看剩余空间",()->scanTvStorage(),"打开电视存储设置",()->openTvStorageSettings());
+    addButton(cleanup,"一键清理",false,()->cleanCache());
     addButton(cleanup,"查看下载文件",false,()->openFolder("/sdcard/Download"));
     LinearLayout c = card(body);
     section(c, "日常工具", "先了解设备状态，再做有依据的调整。");
@@ -3628,7 +3545,7 @@ public class MainActivity extends Activity {
     terminalTitle.setTypeface(null, Typeface.BOLD);
     terminal.addView(terminalTitle);
     gap(terminal, 6);
-    terminal.addView(text("支持多行编辑，执行后完整回显；上次结果离线也能查看。终端是自由命令，不受去臃肿清单保护。", 12, 0xffb0bfd5));
+    terminal.addView(text("支持多行编辑，执行后完整回显；上次结果离线也能查看。", 12, 0xffb0bfd5));
     gap(terminal, 14);
     EditText cmd = field("例如：getprop ro.product.model", draftCommand);
     commandInput = cmd;
@@ -3678,9 +3595,29 @@ public class MainActivity extends Activity {
     if(!requestConnection())return;
     final String[] report={""};
     run("查看电视剩余空间",()->{report[0]=tvStorage(adb);return "";},()->new DeckDialogBuilder(this)
-      .setTitle("电视内部存储").setMessage(report[0]+"\n\n该读数仅供查看，不会删除任何内容。应用缓存需在电视设置中逐项清理。")
-      .setPositiveButton("打开电视存储设置",(d,w)->openTvStorageSettings())
+      .setTitle("电视内部存储").setMessage(report[0]+"\n\n该读数仅供查看，不会删除任何内容。")
+      .setPositiveButton("一键清理",(d,w)->cleanCache())
+      .setNeutralButton("打开电视存储设置",(d,w)->openTvStorageSettings())
       .setNegativeButton("关闭",null).show());
+  }
+  private void cleanCache(){
+    if(!requestConnection())return;
+    final AdbClient client=adb;
+    final CacheCleaner.Outcome[] outcome={null};
+    run("一键清理",()->{
+      outcome[0]=CacheCleaner.execute(command->{
+        if(client!=adb||!client.isConnected())throw new IOException("电视连接已变化或中断");
+        try{AdbClient.Result response=client.shell(command,120000);return new CacheCleaner.Reply(response.exitCode,response.raw);}
+        catch(AdbClient.ShellFailure e){throw new IOException(e.getMessage()+"\n"+e.raw,e);}
+      },before->{
+        taskProgress("清理前可用约 "+size(before)+" · 正在请求系统清理缓存");
+        java.util.concurrent.CountDownLatch displayed=new java.util.concurrent.CountDownLatch(1);
+        ui.post(()->displayed.countDown());
+        if(!displayed.await(5,java.util.concurrent.TimeUnit.SECONDS))throw new IOException("无法显示清理前空间，未执行清理");
+      });
+      if(outcome[0].failed||!outcome[0].afterKnown||outcome[0].after<=outcome[0].before)throw new IOException(outcome[0].report());
+      return "";
+    },()->dialog("一键清理结果",outcome[0].report()));
   }
   private void openTvStorageSettings(){
     if(!requestConnection())return;
