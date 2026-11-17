@@ -3,7 +3,7 @@ import subprocess,xml.etree.ElementTree as E
 r=Path(__file__).resolve().parents[1];out=r/'build/palette-test';out.mkdir(parents=True,exist_ok=True)
 subprocess.run(['java','-jar',str(r/'.toolchain/ecj.jar'),'-8','-nowarn','-encoding','UTF-8','-d',str(out),str(r/'app/src/main/java/cn/linkdeck/adb/UiPalette.java'),str(r/'tests/PaletteChecks.java')],check=True)
 subprocess.run(['java','-cp',str(out),'cn.linkdeck.adb.PaletteChecks'],check=True)
-for i in range(1,4):
+for i in range(1,5):
  root=E.parse(r/f'app/src/main/res/values/palette_{i}.xml').getroot()
  names={x.attrib['name'] for x in root}
  assert f'PaletteTheme{i}' in names and f'PaletteDialog{i}' in names

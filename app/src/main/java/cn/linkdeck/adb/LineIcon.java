@@ -57,6 +57,15 @@ public final class LineIcon extends View {
       p.close();
       c.drawPath(p, pen);
       c.drawLine(3, 9, 21, 9, pen);
+    } else if(kind==4){
+      Path gear=new Path();
+      for(int tooth=0;tooth<8;tooth++)for(int corner=0;corner<4;corner++){
+        double angle=Math.toRadians(tooth*45+corner*11.25-90);
+        float radius=(corner==1||corner==2)?9.5f:7.3f;
+        float x=12+(float)Math.cos(angle)*radius,y=12+(float)Math.sin(angle)*radius;
+        if(tooth==0&&corner==0)gear.moveTo(x,y);else gear.lineTo(x,y);
+      }
+      gear.close();c.drawPath(gear,pen);c.drawCircle(12,12,3.1f,pen);
     } else if(kind==5){
       Path back=new Path();back.moveTo(10,5);back.lineTo(4,11);back.lineTo(10,17);c.drawPath(back,pen);c.drawLine(4,11,15,11,pen);c.drawArc(new RectF(10,11,21,22),-90,145,false,pen);
     } else if(kind==6){

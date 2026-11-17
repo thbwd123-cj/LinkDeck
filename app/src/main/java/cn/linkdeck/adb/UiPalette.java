@@ -1,15 +1,15 @@
 package cn.linkdeck.adb;
-/** Shared dark palettes. Color tables preserve luminance and warning hues. */
+/** Shared light and dark palettes. Color tables preserve luminance and warning hues. */
 public final class UiPalette {
- public static final String[] IDS={"original","forest","violet","amber"};
- public static final String[] NAMES={"青蓝 · 默认","松绿","紫罗兰","琥珀"};
+ public static final String[] IDS={"original","forest","violet","amber","light"};
+ public static final String[] NAMES={"青蓝 · 默认","松绿","紫罗兰","琥珀","云白 · 浅色"};
  private static volatile int selected;
  public static int index(String id){for(int i=0;i<IDS.length;i++)if(IDS[i].equals(id))return i;return 0;}
  public static void select(String id){selected=index(id);}
  public static int current(){return selected;}
  public static String themeName(){return selected==0?"AppTheme":"PaletteTheme"+selected;}
  public static String dialogName(){return selected==0?"SoftDialog":"PaletteDialog"+selected;}
- public static int color(int original){if(selected==0)return original;switch(original){
+ public static int color(int original){if(selected==4)return light(original);if(selected==0)return original;switch(original){
 case 0x00225168: return selected==1?0x001c5634:selected==2?0x00633c79:0x00634720;
 case 0x002e8a80: return selected==1?0x00338d58:selected==2?0x00956dad:0x00987748;
 case 0x0048cdb9: return selected==1?0x0052d087:selected==2?0x00d2abe8:0x00dbb37a;
@@ -101,6 +101,110 @@ case 0xffe0ebfa: return selected==1?0xffd7f0e1:selected==2?0xfff3e5fb:0xfff3e9da
 case 0xffedf3ff: return selected==1?0xffe6f7ed:selected==2?0xfff9efff:0xfff9f2e8;
 case 0xffedf5ff: return selected==1?0xffe7f8ee:selected==2?0xfffaf1ff:0xfffbf3e9;
 case 0xffeff5ff: return selected==1?0xffe9f8ef:selected==2?0xfffaf2ff:0xfffaf4eb;
+default:return original;}}
+ private static int light(int original){switch(original){
+case 0x00225168:return 0x00ced5d9;
+case 0x002e8a80:return 0x001d5851;
+case 0x0048cdb9:return 0x00195c54;
+case 0x004ce1cd:return 0x00006b60;
+case 0x122e8a80:return 0x121d5851;
+case 0x150e887c:return 0x15c7d2da;
+case 0x1648cdb9:return 0x16195c54;
+case 0x2256e5d1:return 0x2210665c;
+case 0x250e887c:return 0x25c7d2da;
+case 0x284ce1cd:return 0x28006b60;
+case 0x30225168:return 0x30ced5d9;
+case 0x334ce1cd:return 0x33006b60;
+case 0x4453edcf:return 0x440c6a5f;
+case 0x5554dfca:return 0x55126359;
+case 0x60000000:return 0x60fafafa;
+case 0x664ce1cd:return 0x66006b60;
+case 0xff03070c:return 0xfff4f6f7;
+case 0xff030e16:return 0xfff1f3f5;
+case 0xff040b13:return 0xfff2f4f5;
+case 0xff040e18:return 0xfff0f3f4;
+case 0xff060e16:return 0xfff0f3f4;
+case 0xff062029:return 0xffeaeef0;
+case 0xff062d2a:return 0xffffffff;
+case 0xff072a2a:return 0xffffffff;
+case 0xff07534e:return 0xffdbe2e7;
+case 0xff090f17:return 0xfff0f1f3;
+case 0xff091c24:return 0xffebeef0;
+case 0xff0a131f:return 0xffedeff1;
+case 0xff0b111a:return 0xffeef0f1;
+case 0xff0b131e:return 0xfff4f7fa;
+case 0xff0d1724:return 0xffeaedef;
+case 0xff0e1c28:return 0xffe9ebed;
+case 0xff101c26:return 0xffe9ebed;
+case 0xff101d2c:return 0xffe7eaec;
+case 0xff101f2b:return 0xffe7eaec;
+case 0xff102332:return 0xffe5e8eb;
+case 0xff102731:return 0xffe5e9eb;
+case 0xff102d31:return 0xffe5e9eb;
+case 0xff113f48:return 0xffdde2e6;
+case 0xff13243d:return 0xffe0e4e7;
+case 0xff153d40:return 0xffdfe3e6;
+case 0xff15a89e:return 0xff0d685e;
+case 0xff162430:return 0xffffffff;
+case 0xff164b54:return 0xffd8dee2;
+case 0xff173d43:return 0xffdee2e5;
+case 0xff195252:return 0xffd8dde1;
+case 0xff1a2d40:return 0xffdee2e4;
+case 0xff1b2532:return 0xffe3e5e7;
+case 0xff1b2b3e:return 0xffdfe2e4;
+case 0xff1c2c3a:return 0xffe0e3e5;
+case 0xff203348:return 0xffdadee1;
+case 0xff21334e:return 0xffd8dcdf;
+case 0xff21374b:return 0xffd9dde0;
+case 0xff23485c:return 0xffd2d8db;
+case 0xff253347:return 0xffd9dddf;
+case 0xff253e50:return 0xffd6dadd;
+case 0xff263b4a:return 0xffd8dcde;
+case 0xff269e9d:return 0xff175f56;
+case 0xff286663:return 0xffced4d8;
+case 0xff2a3748:return 0xffd8dbdd;
+case 0xff2a6968:return 0xffcdd2d6;
+case 0xff2b3543:return 0xffdadcde;
+case 0xff304152:return 0xffd3d7d9;
+case 0xff304257:return 0xffb2c4d0;
+case 0xff309d95:return 0xff1b5a53;
+case 0xff327f84:return 0xff20554f;
+case 0xff344557:return 0xffd1d4d6;
+case 0xff35485e:return 0xffced2d5;
+case 0xff364553:return 0xffd2d5d6;
+case 0xff3d3326:return 0xffdddfe1;
+case 0xff40ddc6:return 0xff12645a;
+case 0xff42dcc8:return 0xff12635a;
+case 0xff49e2cd:return 0xff006b60;
+case 0xff4b6175:return 0xff415868;
+case 0xff4ce1cd:return 0xff006b60;
+case 0xff58e7d3:return 0xff0f675c;
+case 0xff5a9b97:return 0xff3e5362;
+case 0xff617187:return 0xff3e5464;
+case 0xff65dbce:return 0xff165f57;
+case 0xff68778a:return 0xff3e5363;
+case 0xff70829a:return 0xff3c5160;
+case 0xff728599:return 0xff3c5160;
+case 0xff8bffe9:return 0xff0c6a5f;
+case 0xff9fb2ce:return 0xff354855;
+case 0xff9fe6ca:return 0xff185d55;
+case 0xffa1fff1:return 0xff0c6a5f;
+case 0xffa4b3c8:return 0xff435765;
+case 0xffa6b4c8:return 0xff435765;
+case 0xffaabbd0:return 0xff344754;
+case 0xffb0bfd5:return 0xff344652;
+case 0xffb2842c:return 0xff72551c;
+case 0xffb2fff1:return 0xff0c6a5f;
+case 0xffc1fff2:return 0xff0c6a5f;
+case 0xffe0ebfa:return 0xff10655b;
+case 0xffe8bf85:return 0xff795500;
+case 0xffedf3ff:return 0xff0c6a5f;
+case 0xffedf5ff:return 0xff172b3a;
+case 0xffeff5ff:return 0xff172b3a;
+case 0xffff9292:return 0xffb42335;
+case 0xffffb6aa:return 0xff7d2112;
+case 0xffffcf80:return 0xff7d5412;
+case 0xffffffff:return 0xff2b3a45;
 default:return original;}}
  private UiPalette(){}
 }

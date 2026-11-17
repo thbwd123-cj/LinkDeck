@@ -448,8 +448,11 @@ public class MainActivity extends Activity {
   private VolumeGlide volumeGlide;
   private void show(int target) {
     BG=UiPalette.color(0xff0b131e);INK=UiPalette.color(0xffedf5ff);MUTED=UiPalette.color(0xffa4b3c8);
-    TEAL=UiPalette.color(0xff4ce1cd);LINE=UiPalette.color(0xff304257);RED=0xffff9292;
+    TEAL=UiPalette.color(0xff4ce1cd);LINE=UiPalette.color(0xff304257);RED=UiPalette.color(0xffff9292);
     getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
+    int barFlags=View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+    int currentFlags=getWindow().getDecorView().getSystemUiVisibility();
+    getWindow().getDecorView().setSystemUiVisibility(UiPalette.current()==4?currentFlags|barFlags:currentFlags&~barFlags);
 
     final int direction=Integer.compare(target,page);
     if (page == 0 && hostInput != null) {
@@ -2269,7 +2272,7 @@ public class MainActivity extends Activity {
     panel.setClipToOutline(true);
     panel.setPadding(dp(18), dp(18), dp(18), dp(12));
     LinearLayout top = row();
-    TextView title = text("执行结果", 22, Color.WHITE);
+    TextView title = text("执行结果", 22, INK);
     title.setTypeface(null, Typeface.BOLD);
     top.addView(title, new LinearLayout.LayoutParams(0, -2, 1));
     TextView state =
@@ -3564,7 +3567,7 @@ public class MainActivity extends Activity {
     terminal.setBackground(shape(UiPalette.color(0xff13243d), 22));
     terminal.addView(text("TERMINAL  /  命令工作台", 12, UiPalette.color(0xffe8bf85)));
     gap(terminal, 8);
-    TextView terminalTitle = text("命令终端", 21, Color.WHITE);
+    TextView terminalTitle = text("命令终端", 21, INK);
     terminalTitle.setTypeface(null, Typeface.BOLD);
     terminal.addView(terminalTitle);
     gap(terminal, 6);
