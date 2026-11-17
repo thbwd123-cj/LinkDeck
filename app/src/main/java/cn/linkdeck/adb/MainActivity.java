@@ -371,9 +371,7 @@ public class MainActivity extends Activity {
   private LinearLayout card(LinearLayout parent) {
     LinearLayout c = column();
     c.setPadding(dp(16), dp(16), dp(16), dp(16));
-    GradientDrawable background = shape(UiPalette.color(0xff162430), 18);
-    background.setStroke(dp(1), LINE);
-    c.setBackground(background);
+    c.setBackground(new GlassSurface(c,(AuroraLayout)root,22,false));
     c.setElevation(dp(1));
     LinearLayout.LayoutParams p = full();
     p.bottomMargin = dp(12);
@@ -395,7 +393,7 @@ public class MainActivity extends Activity {
   }
 
   private TextView button(String label, boolean primary, Runnable action) {
-    TextView b = text(label, 14, primary ? UiPalette.color(0xff062d2a) : INK);
+    TextView b = text(label, 14, INK);
     b.setGravity(Gravity.CENTER);
     b.setFocusable(true);
     b.setAccessibilityDelegate(new View.AccessibilityDelegate(){@Override public void onInitializeAccessibilityNodeInfo(View host,AccessibilityNodeInfo info){super.onInitializeAccessibilityNodeInfo(host,info);info.setClassName(Button.class.getName());}});
@@ -447,7 +445,7 @@ public class MainActivity extends Activity {
   private LinearLayout remoteInputPanel;
   private VolumeGlide volumeGlide;
   private void show(int target) {
-    BG=UiPalette.color(0xff0b131e);INK=UiPalette.color(0xffedf5ff);MUTED=UiPalette.color(0xffa4b3c8);
+    BG=AuroraStyle.base();INK=UiPalette.color(0xffedf5ff);MUTED=UiPalette.color(0xffa4b3c8);
     TEAL=UiPalette.color(0xff4ce1cd);LINE=UiPalette.color(0xff304257);RED=UiPalette.color(0xffff9292);
     getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
     int barFlags=View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
@@ -465,8 +463,7 @@ public class MainActivity extends Activity {
     ui.removeCallbacks(iconRefresh);
     iconViews.clear();
     page = target;
-    root = column();
-    root.setBackground(new SoftBackdrop());
+    root = new AuroraLayout(this,()->motionEnabled());
     root.setPadding(0, 0, 0, 0);
     setContentView(root);
     root.setKeepScreenOn(busy);
@@ -502,6 +499,11 @@ public class MainActivity extends Activity {
         v -> {
           if (!connected()) openConnectionManager();
         });
+    status.setGravity(Gravity.RIGHT|Gravity.CENTER_VERTICAL);
+    ConnectionLamp lamp=new ConnectionLamp(getResources().getDisplayMetrics().density,()->connected(),()->busy);
+    lamp.setBounds(0,0,dp(24),dp(24));
+    status.setCompoundDrawables(null,null,lamp,null);
+    status.setCompoundDrawablePadding(dp(6));
     status.setSingleLine(true);
     status.setEllipsize(TextUtils.TruncateAt.MIDDLE);
     header.addView(status);
@@ -524,8 +526,8 @@ public class MainActivity extends Activity {
             Gravity.TOP | Gravity.CENTER_HORIZONTAL));
     root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
     nav = row();
-    GradientDrawable dockBackground=shape(UiPalette.color(0xff162430),22);dockBackground.setStroke(dp(1),LINE);nav.setBackground(dockBackground);
-    nav.setElevation(dp(2));
+    nav.setBackground(new GlassSurface(nav,(AuroraLayout)root,40,false));
+    nav.setElevation(dp(10));
     nav.setPadding(dp(4), dp(5), dp(4), dp(5));
     String[] names = {"设备", "遥控", "应用", "文件", "工具"};
     for (int i = 0; i < names.length; i++) {
@@ -538,7 +540,7 @@ public class MainActivity extends Activity {
       visual.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
       LinearLayout glyph = row();
       glyph.setGravity(Gravity.CENTER);
-      glyph.setBackground(shape(i == page ? pageTint() : Color.TRANSPARENT, 18));
+      if(i==page)visual.setBackground(new GlassSurface(visual,(AuroraLayout)root,28,true));
       glyph.addView(new LineIcon(this, i, i == page ? TEAL : MUTED),new LinearLayout.LayoutParams(dp(24), dp(24)));
       visual.addView(glyph,new LinearLayout.LayoutParams(dp(54),dp(31)));
       if(i==page)DeckMotion.select(glyph,motionEnabled());
@@ -560,7 +562,7 @@ public class MainActivity extends Activity {
       nav.addView(item,new LinearLayout.LayoutParams(0,-2,1));
     }
     LinearLayout.LayoutParams dock = full();
-    dock.setMargins(dp(10), dp(5), dp(10), dp(7));
+    dock.setMargins(dp(14), dp(8), dp(14), dp(10));
     root.addView(nav, dock);
     if (page == 0) home();
     else if (page == 1) remote();
@@ -574,8 +576,8 @@ public class MainActivity extends Activity {
   private void appearance(){
     LinearLayout content=column();content.setPadding(dp(20),dp(10),dp(20),dp(8));
     addButton(content,"颜色主题 · "+UiPalette.NAMES[UiPalette.current()],true,()->choosePalette());
-    android.widget.Switch reduce=new android.widget.Switch(this);reduce.setText("减少动态效果");reduce.setTextColor(INK);reduce.setTextSize(15);reduce.setPadding(0,dp(8),0,dp(12));reduce.setChecked(prefs.getBoolean("reduce_motion",false));reduce.setOnCheckedChangeListener((v,on)->prefs.edit().putBoolean("reduce_motion",on).apply());content.addView(reduce);
-    content.addView(text("关闭页面与按钮过渡。系统关闭动画时也会自动停用动效。",12,MUTED));
+    android.widget.Switch reduce=new android.widget.Switch(this);reduce.setText("减少动态效果");reduce.setTextColor(INK);reduce.setTextSize(15);reduce.setPadding(0,dp(8),0,dp(12));reduce.setChecked(prefs.getBoolean("reduce_motion",false));reduce.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("reduce_motion",on).apply();((AuroraLayout)root).refreshMotion();});content.addView(reduce);
+    content.addView(text("关闭极光流动、页面与按钮过渡。系统关闭动画时也会自动停用动效。",12,MUTED));
     appearanceDialog=new DeckDialogBuilder(this).setTitle("界面与配色").setView(content).setNegativeButton("关闭",null).show();
   }
   private AlertDialog appearanceDialog;
@@ -900,7 +902,7 @@ public class MainActivity extends Activity {
     final int succeeded,failed;
     BatchFailure(int success,int failure,String report){super(report);succeeded=success;failed=failure;}
   }
-  private void settingsMenu(){new DeckDialogBuilder(this).setTitle("设置").setItems(new String[]{"界面与配色","后台连接设置","任务与记录","恢复中心","设备能力报告","连接向导与支持范围","关于轻连","开源组件与许可"},(d,w)->{if(w==0)appearance();else if(w==1)backgroundHelp();else if(w==2)taskCenter();else if(w==3)recovery();else if(w==4)capabilityReport();else if(w==5)connectionWizard();else if(w==6)dialog("关于轻连","版本 "+AppVersion.NAME+"。支持 ADB 与纯红外遥控、应用管理与安装、文件传输和命令回显。电视功能以实际授权为准。应用缓存需在电视设置中处理。");else licenses();}).setNegativeButton("关闭",null).show();}
+  private void settingsMenu(){new DeckDialogBuilder(this).setTitle("设置").setItems(new String[]{"界面与配色","后台连接设置","任务与记录","恢复中心","设备能力报告","连接向导与支持范围","关于轻连","开源组件与许可"},(d,w)->{if(w==0)appearance();else if(w==1)backgroundHelp();else if(w==2)taskCenter();else if(w==3)recovery();else if(w==4)capabilityReport();else if(w==5)connectionWizard();else if(w==6)dialog("关于轻连","版本 "+AppVersion.NAME+"。支持 ADB 与纯红外遥控、应用管理与安装、文件传输和命令回显。电视功能以实际授权为准。支持一键清理应用缓存，不清除用户数据与登录；能否清理取决于电视授权，结果以实际返回为准。");else licenses();}).setNegativeButton("关闭",null).show();}
   private void openConnectionManager(){if(page!=0)show(0);if(connectionPanel!=null){connectionPanel.setVisibility(View.VISIBLE);connectionManager.post(()->{connectionManager.requestRectangleOnScreen(new Rect(0,0,connectionManager.getWidth(),Math.min(connectionManager.getHeight(),dp(300))),true);hostInput.requestFocus();});}}
   private void chooseInstall(String pkg){installExpectedPackage=pkg;new DeckDialogBuilder(this).setTitle(pkg==null?"安装 / 更新": "更新此应用").setItems(new String[]{"选择手机已安装应用","选择 APK 文件"},(d,w)->{if(w==0)phoneApps();else pick(100);}).setNegativeButton("取消",(d,w)->installExpectedPackage=null).setOnCancelListener(d->installExpectedPackage=null).show();}
   private void aerialEntry(LinearLayout parent){LinearLayout c=card(parent);LinearLayout r=row();r.addView(text("Aerial TV",15,INK),new LinearLayout.LayoutParams(0,-2,1));TextView open=button("桌面管理  ›",false,()->aerialCenter());open.setTextSize(12);r.addView(open);c.addView(r);}
@@ -996,7 +998,7 @@ public class MainActivity extends Activity {
   private void previewCompatibilityExport(DeviceCapabilities.Snapshot snapshot){try{String report=snapshot.export();new DeckDialogBuilder(this).setTitle("诊断报告导出预览").setMessage(report+"\n\n包含型号、品牌、系统与功能检查结果；不包含地址、序列号、配对码、公钥或原始命令输出。仅在你选择保存后写出文件，不会自动上传。").setNegativeButton("取消",null).setPositiveButton("选择保存位置",(d,w)->run("准备兼容报告导出",()->{writeDesktopFile(compatibilityPending(),report);ui.post(()->createDocument(108,"application/json","LinkDeck_compatibility.json"));return "";},null)).show();}catch(Exception e){dialog("报告暂不可用",message(e));}}
 
   private void home() {
-    LinearLayout hero=card(body);GradientDrawable heroBg=gradient(UiPalette.color(0xff253347),UiPalette.color(0xff101f2b),20);heroBg.setStroke(dp(1),LINE);hero.setBackground(heroBg);LinearLayout top=row();
+    LinearLayout hero=card(body);hero.setBackground(new GlassSurface(hero,(AuroraLayout)root,24,true));LinearLayout top=row();
     top.addView(new TvScene(this),new LinearLayout.LayoutParams(dp(112),dp(112)));
     LinearLayout info=column();info.setPadding(dp(12),dp(2),0,0);TextView name=text(connected()?"客厅电视":"连接你的电视",17,INK);name.setTypeface(null,Typeface.BOLD);info.addView(name);gap(info,7);LinearLayout badge=row();badge(badge,connected()?"已连接":"等待连接",connected()?TEAL:UiPalette.color(0xffffcf80));info.addView(badge);gap(info,8);
     info.addView(text(connected()?device:"让电视，触手可及",12,MUTED));gap(info,4);TextView addressHint=text(connected()?host+":"+prefs.getString("port","5555"):"手机与电视需在同一网络",11,MUTED);addressHint.setSingleLine(true);addressHint.setEllipsize(TextUtils.TruncateAt.MIDDLE);info.addView(addressHint);top.addView(info,new LinearLayout.LayoutParams(0,-2,1));hero.addView(top);
@@ -1271,7 +1273,7 @@ public class MainActivity extends Activity {
     body.addView(mode);gap(body,12);
     if(irMode()&&activeIr()==null)addButton(body,"选择电视品牌与遥控码",true,()->chooseIrBrand());
     LinearLayout toolbar=row();TextView heading=text("方向控制",13,MUTED);toolbar.addView(heading,new LinearLayout.LayoutParams(0,-2,1));android.widget.Switch large=new android.widget.Switch(this);large.setText("大按键");large.setTextColor(MUTED);large.setTextSize(12);large.setChecked(prefs.getBoolean("largeRemote",false));large.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("largeRemote",on).apply();show(1);});toolbar.addView(large);body.addView(toolbar);gap(body,12);
-    FrameLayout pad=new FrameLayout(this);pad.setBackground(new RemoteFace());int maximum=Math.min(getResources().getDisplayMetrics().widthPixels-dp(36),dp(prefs.getBoolean("largeRemote",false)?344:280));int diameter=Math.min(maximum,Math.max(dp(230),(int)(getResources().getDisplayMetrics().heightPixels*(prefs.getBoolean("largeRemote",false)?.44f:.38f))));
+    FrameLayout pad=new FrameLayout(this);pad.setAddStatesFromChildren(true);pad.setBackground(new RemoteFace());int maximum=Math.min(getResources().getDisplayMetrics().widthPixels-dp(36),dp(prefs.getBoolean("largeRemote",false)?344:280));int diameter=Math.min(maximum,Math.max(dp(230),(int)(getResources().getDisplayMetrics().heightPixels*(prefs.getBoolean("largeRemote",false)?.44f:.38f))));
     TextView center=button("确定",true,()->remoteKey(23));center.setContentDescription("确认");center.setTextSize(19);center.setPadding(0,0,0,0);RemoteKeyArt core=new RemoteKeyArt(-1);center.setTextColor(INK);center.setBackground(new RippleDrawable(ColorStateList.valueOf(UiPalette.color(0x5554dfca)),core,null));markIrKey(center,"OK");FrameLayout.LayoutParams cp=new FrameLayout.LayoutParams(dp(94),dp(94),Gravity.CENTER);pad.addView(center,cp);
     String[] labels={"⌃","⌄","‹","›"};String[] descriptions={"向上","向下","向左","向右"};int[] codes={19,20,21,22};int[] positions={Gravity.TOP|Gravity.CENTER_HORIZONTAL,Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL,Gravity.LEFT|Gravity.CENTER_VERTICAL,Gravity.RIGHT|Gravity.CENTER_VERTICAL};
     String[] irDirections={"UP","DOWN","LEFT","RIGHT"};
@@ -1279,7 +1281,7 @@ public class MainActivity extends Activity {
     LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(diameter,diameter);pp.gravity=Gravity.CENTER_HORIZONTAL;body.addView(pad,pp);gap(body,12);
     int actionDiameter=Math.min((getResources().getDisplayMetrics().widthPixels-dp(28))/3,dp(76+28*Math.max(0,getResources().getConfiguration().fontScale-1)));
     LinearLayout actions=row();String[] names={"返回","主页","菜单"};String[] irActions={"BACK","HOME","MENU"};int[] keycodes={4,3,82};for(int i=0;i<3;i++){final int code=keycodes[i];LinearLayout key=column();key.setGravity(Gravity.CENTER);key.setPadding(dp(8),dp(12),dp(8),dp(10));DepthSurface bg=new DepthSurface(getResources().getDisplayMetrics().density,50,false);key.setBackground(new RippleDrawable(ColorStateList.valueOf(UiPalette.color(0x2256e5d1)),bg,null));key.addView(new LineIcon(this,5+i,INK),new LinearLayout.LayoutParams(dp(25),dp(25)));gap(key,5);TextView caption=text(names[i],12,INK);caption.setGravity(Gravity.CENTER);key.addView(caption);caption.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);key.setContentDescription(names[i]);pressMotion(key);key.setFocusable(true);key.setAccessibilityDelegate(new View.AccessibilityDelegate(){@Override public void onInitializeAccessibilityNodeInfo(View host,AccessibilityNodeInfo info){super.onInitializeAccessibilityNodeInfo(host,info);info.setClassName(Button.class.getName());}});key.setOnClickListener(v->{v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);remoteKey(code);});key.setElevation(dp(3));markIrKey(key,irActions[i]);FrameLayout slot=new FrameLayout(this);FrameLayout.LayoutParams circle=new FrameLayout.LayoutParams(actionDiameter,actionDiameter,Gravity.CENTER);slot.addView(key,circle);actions.addView(slot,new LinearLayout.LayoutParams(0,actionDiameter+dp(8),1));}body.addView(actions);gap(body,10);
-    LinearLayout volume=card(body);volume.setPadding(dp(12),dp(10),dp(12),dp(9));volume.setBackground(new DepthSurface(getResources().getDisplayMetrics().density,26,false));TextView volumeTitle=text("音量",12,MUTED);volumeTitle.setGravity(Gravity.CENTER);volume.addView(volumeTitle);LinearLayout volumeRow=row();VolumeGlide glide=new VolumeGlide(this,()->!irMode()?requestConnection():irAvailable("VOL_UP")&&irAvailable("VOL_DOWN"),dir->remoteKey(dir>0?24:25),()->motionEnabled());volumeGlide=glide;View minus=iconButton("减小音量",12,INK,()->{if(irMode()||requestConnection()){remoteKey(25);glide.feedback(-1);}});repeatVolume((TextView)((FrameLayout)minus).getChildAt(0),25,()->glide.feedback(-1));markIrKey(minus,"VOL_DOWN");volumeRow.addView(minus,new LinearLayout.LayoutParams(dp(44),dp(44)));volumeRow.addView(glide,new LinearLayout.LayoutParams(0,dp(46),1));View plus=iconButton("增大音量",13,INK,()->{if(irMode()||requestConnection()){remoteKey(24);glide.feedback(1);}});repeatVolume((TextView)((FrameLayout)plus).getChildAt(0),24,()->glide.feedback(1));markIrKey(plus,"VOL_UP");volumeRow.addView(plus,new LinearLayout.LayoutParams(dp(44),dp(44)));volume.addView(volumeRow);TextView volumeHint=text("左右拖动调节 · 松手回中",10,MUTED);volumeHint.setGravity(Gravity.CENTER);volume.addView(volumeHint);if(irMode()&&(!irAvailable("VOL_UP")||!irAvailable("VOL_DOWN"))){glide.setEnabled(false);glide.setAlpha(.38f);volumeHint.setText("滑动音量需同时具备音量＋和音量－");}
+    LinearLayout volume=card(body);volume.setPadding(dp(12),dp(10),dp(12),dp(9));volume.setBackground(new GlassSurface(volume,(AuroraLayout)root,28,false));TextView volumeTitle=text("音量",12,MUTED);volumeTitle.setGravity(Gravity.CENTER);volume.addView(volumeTitle);LinearLayout volumeRow=row();VolumeGlide glide=new VolumeGlide(this,()->!irMode()?requestConnection():irAvailable("VOL_UP")&&irAvailable("VOL_DOWN"),dir->remoteKey(dir>0?24:25),()->motionEnabled());volumeGlide=glide;View minus=iconButton("减小音量",12,INK,()->{if(irMode()||requestConnection()){remoteKey(25);glide.feedback(-1);}});repeatVolume((TextView)((FrameLayout)minus).getChildAt(0),25,()->glide.feedback(-1));markIrKey(minus,"VOL_DOWN");volumeRow.addView(minus,new LinearLayout.LayoutParams(dp(44),dp(44)));volumeRow.addView(glide,new LinearLayout.LayoutParams(0,dp(46),1));View plus=iconButton("增大音量",13,INK,()->{if(irMode()||requestConnection()){remoteKey(24);glide.feedback(1);}});repeatVolume((TextView)((FrameLayout)plus).getChildAt(0),24,()->glide.feedback(1));markIrKey(plus,"VOL_UP");volumeRow.addView(plus,new LinearLayout.LayoutParams(dp(44),dp(44)));volume.addView(volumeRow);TextView volumeHint=text("左右拖动调节 · 松手回中",10,MUTED);volumeHint.setGravity(Gravity.CENTER);volume.addView(volumeHint);if(irMode()&&(!irAvailable("VOL_UP")||!irAvailable("VOL_DOWN"))){glide.setEnabled(false);glide.setAlpha(.38f);volumeHint.setText("滑动音量需同时具备音量＋和音量－");}
     if(irMode()){
       LinearLayout extras=row();TextView mute=button("静音",false,()->irSend("MUTE"));markIrKey(mute,"MUTE");
       LinearLayout.LayoutParams ml=new LinearLayout.LayoutParams(0,-2,1);ml.rightMargin=dp(5);extras.addView(mute,ml);
@@ -3564,7 +3566,7 @@ public class MainActivity extends Activity {
                         },
                         () -> show(0))));
     LinearLayout terminal = card(body);
-    terminal.setBackground(shape(UiPalette.color(0xff13243d), 22));
+    terminal.setBackground(new GlassSurface(terminal,(AuroraLayout)root,22,false));
     terminal.addView(text("TERMINAL  /  命令工作台", 12, UiPalette.color(0xffe8bf85)));
     gap(terminal, 8);
     TextView terminalTitle = text("命令终端", 21, INK);

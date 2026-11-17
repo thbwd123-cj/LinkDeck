@@ -1,24 +1,47 @@
 <resources>
  <style name="PaletteTheme3" parent="android:style/Theme.Material.NoActionBar">
-  <item name="android:fontFamily">sans</item><item name="android:colorAccent">#EDC68E</item>
-  <item name="android:textColorPrimary">#FAF4EB</item><item name="android:textColorSecondary">#BEB19E</item>
-  <item name="android:windowLightStatusBar">false</item><item name="android:statusBarColor">#181209</item>
-  <item name="android:navigationBarColor">#181209</item><item name="android:windowLightNavigationBar">false</item>
-  <item name="android:windowActionModeOverlay">true</item><item name="android:windowBackground">#181209</item>
-  <item name="android:alertDialogTheme">@style/PaletteDialog3</item><item name="android:colorControlNormal">#BEB19E</item>
+  <item name="android:fontFamily">sans</item>
+  <item name="android:colorAccent">#EDC68E</item>
+  <item name="android:textColorPrimary">#FAF4EB</item>
+  <item name="android:textColorSecondary">#BEB19E</item>
+  <item name="android:windowLightStatusBar">false</item>
+  <item name="android:statusBarColor">#201A11</item>
+  <item name="android:navigationBarColor">#201A11</item>
+  <item name="android:windowLightNavigationBar">false</item>
+  <item name="android:windowActionModeOverlay">true</item>
+  <item name="android:windowBackground">#201A11</item>
+  <item name="android:alertDialogTheme">@style/PaletteDialog3</item>
+  <item name="android:colorControlNormal">#BEB19E</item>
  </style>
  <style name="PaletteDialog3" parent="android:style/Theme.Material.Dialog.Alert">
-  <item name="android:windowBackground">@drawable/soft_dialog_background_p3</item><item name="android:colorAccent">#EDC68E</item>
-  <item name="android:textColorPrimary">#FAF4EB</item><item name="android:textColorSecondary">#BEB19E</item>
-  <item name="android:fontFamily">sans</item><item name="android:backgroundDimAmount">0.56</item>
+  <item name="android:windowBackground">@drawable/soft_dialog_background_p3</item>
+  <item name="android:colorAccent">#EDC68E</item>
+  <item name="android:textColorPrimary">#FAF4EB</item>
+  <item name="android:textColorSecondary">#BEB19E</item>
+  <item name="android:fontFamily">sans</item>
+  <item name="android:backgroundDimAmount">0.56</item>
   <item name="android:windowAnimationStyle">@style/PaletteMotion3</item>
-  <item name="android:windowMinWidthMajor">94%</item><item name="android:windowMinWidthMinor">94%</item>
-  <item name="android:buttonBarPositiveButtonStyle">@style/PalettePositive3</item><item name="android:buttonBarNegativeButtonStyle">@style/PaletteSecondary3</item><item name="android:buttonBarNeutralButtonStyle">@style/PaletteSecondary3</item>
+  <item name="android:windowMinWidthMajor">94%</item>
+  <item name="android:windowMinWidthMinor">94%</item>
+  <item name="android:buttonBarPositiveButtonStyle">@style/PalettePositive3</item>
+  <item name="android:buttonBarNegativeButtonStyle">@style/PaletteSecondary3</item>
+  <item name="android:buttonBarNeutralButtonStyle">@style/PaletteSecondary3</item>
  </style>
  <style name="PalettePositive3" parent="android:style/Widget.Material.Button.Borderless">
-  <item name="android:stateListAnimator">@animator/deck_button_press</item><item name="android:background">@drawable/soft_action_p3</item><item name="android:textColor">#31230F</item>
-  <item name="android:minHeight">44dp</item><item name="android:minWidth">88dp</item><item name="android:paddingLeft">16dp</item><item name="android:paddingRight">16dp</item>
+  <item name="android:stateListAnimator">@animator/deck_button_press</item>
+  <item name="android:background">@drawable/soft_action_p3</item>
+  <item name="android:textColor">#FBF3E9</item>
+  <item name="android:minHeight">44dp</item>
+  <item name="android:minWidth">88dp</item>
+  <item name="android:paddingLeft">16dp</item>
+  <item name="android:paddingRight">16dp</item>
  </style>
- <style name="PaletteSecondary3" parent="PalettePositive3"><item name="android:background">@drawable/soft_secondary_p3</item><item name="android:textColor">#FBF3E9</item></style>
- <style name="PaletteMotion3"><item name="android:windowEnterAnimation">@anim/soft_dialog_enter</item><item name="android:windowExitAnimation">@anim/soft_dialog_exit</item></style>
+ <style name="PaletteSecondary3" parent="PalettePositive3">
+  <item name="android:background">@drawable/soft_secondary_p3</item>
+  <item name="android:textColor">#FBF3E9</item>
+ </style>
+ <style name="PaletteMotion3">
+  <item name="android:windowEnterAnimation">@anim/soft_dialog_enter</item>
+  <item name="android:windowExitAnimation">@anim/soft_dialog_exit</item>
+ </style>
 </resources>

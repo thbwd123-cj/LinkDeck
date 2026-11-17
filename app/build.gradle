@@ -1,8 +1,8 @@
 plugins { id 'com.android.application' }
 android {
     namespace 'cn.linkdeck.adb'
-    compileSdk 35
-    defaultConfig { applicationId 'cn.linkdeck.adb'; minSdk 26; targetSdk 35; versionCode 33; versionName '0.16.1' }
+    compileSdk 36
+    defaultConfig { applicationId 'cn.linkdeck.adb'; minSdk 26; targetSdk 36; versionCode 57; versionName '0.19.9' }
     sourceSets.main.jniLibs.srcDirs = ["../third_party/conscrypt/jni","../third_party/spake2/jni"]
     compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
 }
