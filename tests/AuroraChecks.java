@@ -13,15 +13,18 @@ public final class AuroraChecks {
    int glass=over(AuroraStyle.glassTint(),maxGlow,AuroraStyle.glassTopAlpha());
    int key=AuroraStyle.mix(surface,AuroraStyle.light()?0xffffffff:AuroraStyle.edge(),AuroraStyle.light()?.6f:.075f);
    for(int bg:new int[]{base,surface,glass,key})for(int fg:new int[]{UiPalette.color(0xffedf5ff),UiPalette.color(0xffa4b3c8)})check(contrast(fg,bg)>=4.5,"Text contrast "+id+" "+Integer.toHexString(bg)+" = "+contrast(fg,bg));
+   if(AuroraStyle.light())check(AuroraStyle.baseTop()==AuroraStyle.baseBottom(),"Light theme keeps a flat base");
+   else check(luminance(AuroraStyle.baseTop())>luminance(AuroraStyle.baseBottom()),"Dark sky lifts toward the top "+id);
    check(contrast(AuroraStyle.accent(),surface)>=3,"Selected navigation visible "+id);
   }
   check(AuroraStyle.GREEN==0xff2ef2c4&&AuroraStyle.VIOLET==0xff7a5cff,"Prototype colors");
-  check(AuroraStyle.GREEN_ALPHA==.5f&&AuroraStyle.VIOLET_ALPHA==.42f,"Visible spot opacity");
+  check(AuroraStyle.GREEN_ALPHA==.6f&&AuroraStyle.VIOLET_ALPHA==.52f,"Visible spot opacity");
   check(AuroraStyle.GREEN_DIAMETER==340&&AuroraStyle.VIOLET_DIAMETER==300&&AuroraStyle.SPOT_BLUR==46,"Spot geometry");
   check(AuroraStyle.GLASS_BLUR>=10&&AuroraStyle.GLASS_BLUR<=12,"Frost radius");
   check(Math.abs(AuroraStyle.greenDrift(5)-1)<.001&&Math.abs(AuroraStyle.greenDrift(15)+1)<.001&&Math.abs(AuroraStyle.greenDrift(20))<.001,"20 second return period");
   check(Math.abs(AuroraStyle.violetDrift(6.5f)-1)<.001&&Math.abs(AuroraStyle.violetDrift(19.5f)+1)<.001&&Math.abs(AuroraStyle.violetDrift(26))<.001,"26 second return period");
-  UiPalette.select("original");int plain=AuroraStyle.base(),green=screen(AuroraStyle.glowStart(),plain,128),violet=screen(AuroraStyle.glowEnd(),plain,107);
+  check(AuroraStyle.SPOT_FADE==.65f&&AuroraStyle.GLASS_SHEEN_TOP==0x1cffffff&&AuroraStyle.GLASS_SHEEN_MID==0x0bffffff&&AuroraStyle.GLASS_SHEEN_BOTTOM==0x12ffffff,"Prototype blob falloff and glass sheen");
+  UiPalette.select("original");int plain=AuroraStyle.base(),green=screen(AuroraStyle.glowStart(),plain,Math.round(255*AuroraStyle.GREEN_ALPHA)),violet=screen(AuroraStyle.glowEnd(),plain,Math.round(255*AuroraStyle.VIOLET_ALPHA));
   check(((green>>8)&255)-((plain>>8)&255)>100,"Green peak remains visible in a static frame");
   check((violet&255)-(plain&255)>80,"Violet peak remains visible in a static frame");
   Random random=new Random(198);for(int w:new int[]{1,3,7,96})for(int h:new int[]{1,5,11})for(int radius:new int[]{0,1,3}){

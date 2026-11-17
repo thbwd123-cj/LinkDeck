@@ -4,7 +4,7 @@ import android.graphics.*;import android.graphics.drawable.Drawable;import andro
 public final class SoftBackdrop extends Drawable {
  private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG|Paint.FILTER_BITMAP_FLAG);
  private final PorterDuffXfermode screen=new PorterDuffXfermode(PorterDuff.Mode.SCREEN);
- private final RectF lightBounds=new RectF();private final float density;
+ private final RectF lightBounds=new RectF();private final float density;private Shader baseShader;
  private Bitmap green,violet,blurred;private Canvas smallCanvas;private int[] pixels,work;private float phase,sampledPhase=-1;private long sampled=-1;
  public SoftBackdrop(){this(1);}
  public SoftBackdrop(float density){this.density=density;}
@@ -14,16 +14,19 @@ public final class SoftBackdrop extends Drawable {
   if(violet==null)violet=light(AuroraStyle.VIOLET_DIAMETER,AuroraStyle.glowEnd(),AuroraStyle.VIOLET_ALPHA);
   int w=Math.max(1,Math.min(240,Math.round(r.width()/(4*density)))),h=Math.max(1,Math.min(480,Math.round(w*(float)r.height()/r.width())));
   blurred=Bitmap.createBitmap(w,h,Bitmap.Config.ARGB_8888);smallCanvas=new Canvas(blurred);pixels=new int[w*h];work=new int[w*h];sampled=-1;
+  baseShader=new LinearGradient(0,r.top,0,r.bottom,AuroraStyle.baseTop(),AuroraStyle.baseBottom(),Shader.TileMode.CLAMP);
  }
  private Bitmap light(float diameter,int color,float opacity){
   // CSS pixels map to dp. A quarter-resolution software canvas applies the 46 dp blur once.
+  // Prototype blob is a radial gradient: full color near a 40%/40% focal point, transparent at 65%.
   float extent=diameter+4*AuroraStyle.SPOT_BLUR;int size=Math.max(1,Math.round(extent/4));
   Bitmap texture=Bitmap.createBitmap(size,size,Bitmap.Config.ARGB_8888);Canvas c=new Canvas(texture);c.scale(size/extent,size/extent);
-  Paint soft=new Paint(3);soft.setColor(AuroraStyle.alpha(color,Math.round(255*opacity)));soft.setMaskFilter(new BlurMaskFilter(AuroraStyle.SPOT_BLUR,BlurMaskFilter.Blur.NORMAL));c.drawCircle(extent/2,extent/2,diameter/2,soft);return texture;
+  float r=diameter/2,cx=extent/2-r*.2f,cy=extent/2-r*.2f;int core=AuroraStyle.alpha(color,Math.round(255*opacity));
+  Paint soft=new Paint(3);soft.setShader(new RadialGradient(cx,cy,r,new int[]{core,AuroraStyle.alpha(color,0)},new float[]{0,AuroraStyle.SPOT_FADE},Shader.TileMode.CLAMP));soft.setMaskFilter(new BlurMaskFilter(AuroraStyle.SPOT_BLUR,BlurMaskFilter.Blur.NORMAL));c.drawCircle(extent/2,extent/2,r,soft);return texture;
  }
  public void phase(float seconds){phase=seconds;invalidateSelf();}
  private void scene(Canvas c){
-  Rect b=getBounds();c.drawColor(AuroraStyle.base());if(green==null||violet==null)return;
+  Rect b=getBounds();if(baseShader!=null){paint.setXfermode(null);paint.setShader(baseShader);c.drawRect(b,paint);paint.setShader(null);}else c.drawColor(AuroraStyle.base());if(green==null||violet==null)return;
   float g=AuroraStyle.greenDrift(phase),v=AuroraStyle.violetDrift(phase);
   paint.setXfermode(screen);
   spot(c,green,b.left+b.width()*(.12f+.06f*g),b.top+b.height()*(.14f+.025f*g),AuroraStyle.GREEN_DIAMETER);

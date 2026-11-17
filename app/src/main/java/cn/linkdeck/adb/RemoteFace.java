@@ -5,7 +5,7 @@ public final class RemoteFace extends Drawable {
  private final Paint p=new Paint(3);private float x,y,r;private Shader rim,face,halo;private boolean pressed;
  protected void onBoundsChange(Rect b){x=b.exactCenterX();y=b.exactCenterY()-b.height()*.012f;r=Math.min(b.width(),b.height())*.465f;if(r<=0)return;
   int base=AuroraStyle.surface();rim=new LinearGradient(x,y-r,x,y+r,new int[]{AuroraStyle.mix(base,AuroraStyle.edge(),.37f),AuroraStyle.mix(base,AuroraStyle.edge(),.10f),AuroraStyle.base()},new float[]{0,.27f,1},Shader.TileMode.CLAMP);
-  face=new LinearGradient(x-r,y-r,x+r,y+r,new int[]{AuroraStyle.mix(base,AuroraStyle.edge(),.08f),base,AuroraStyle.base()},null,Shader.TileMode.CLAMP);
+  face=new RadialGradient(x-r*.32f,y-r*.44f,r*1.1f,new int[]{0x38ffffff,0x0fffffff,AuroraStyle.light()?0x1f000000:0x57000000},new float[]{0,.42f,.88f},Shader.TileMode.CLAMP);
   halo=new RadialGradient(x,y,r*1.08f,new int[]{AuroraStyle.alpha(AuroraStyle.glowStart(),0),AuroraStyle.alpha(AuroraStyle.glowStart(),0),AuroraStyle.alpha(AuroraStyle.glowStart(),160),AuroraStyle.alpha(AuroraStyle.glowStart(),0)},new float[]{0,.82f,.93f,1},Shader.TileMode.CLAMP);
  }
  public boolean isStateful(){return true;}
