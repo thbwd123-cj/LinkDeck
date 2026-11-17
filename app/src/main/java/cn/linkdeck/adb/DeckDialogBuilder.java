@@ -7,6 +7,10 @@ public final class DeckDialogBuilder extends AlertDialog.Builder {
  public DeckDialogBuilder(Context c){super(c);context=c;}
  @Override public DeckDialogBuilder setItems(CharSequence[] items,android.content.DialogInterface.OnClickListener listener){super.setItems(items,listener);plainItems=true;return this;}
  @Override public DeckDialogBuilder setItems(int items,android.content.DialogInterface.OnClickListener listener){super.setItems(items,listener);plainItems=true;return this;}
+ @Override public DeckDialogBuilder setSingleChoiceItems(CharSequence[] items,int checkedItem,android.content.DialogInterface.OnClickListener listener){super.setSingleChoiceItems(items,checkedItem,listener);plainItems=true;return this;}
+ @Override public DeckDialogBuilder setSingleChoiceItems(int items,int checkedItem,android.content.DialogInterface.OnClickListener listener){super.setSingleChoiceItems(items,checkedItem,listener);plainItems=true;return this;}
+ @Override public DeckDialogBuilder setMultiChoiceItems(CharSequence[] items,boolean[] checkedItems,android.content.DialogInterface.OnMultiChoiceClickListener listener){super.setMultiChoiceItems(items,checkedItems,listener);plainItems=true;return this;}
+ @Override public DeckDialogBuilder setMultiChoiceItems(int items,boolean[] checkedItems,android.content.DialogInterface.OnMultiChoiceClickListener listener){super.setMultiChoiceItems(items,checkedItems,listener);plainItems=true;return this;}
  private int dp(float n){return Math.round(n*context.getResources().getDisplayMetrics().density);}
  @Override public AlertDialog create(){
   AlertDialog d=super.create();Window w=d.getWindow();if(w!=null){if(plainItems)DialogListTint.beforeFirstDraw(d);w.setGravity(Gravity.BOTTOM);if(context.getSharedPreferences("linkdeck",Context.MODE_PRIVATE).getBoolean("reduce_motion",false)||!android.animation.ValueAnimator.areAnimatorsEnabled())w.setWindowAnimations(0);w.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);

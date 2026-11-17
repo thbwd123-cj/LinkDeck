@@ -25,6 +25,7 @@ public final class DialogTintChecks {
   for(int i=0;i<8;i++){check(adapter.getItem(i)==source.items[i]&&adapter.getItemId(i)==900+i,"Item IDs retained");check(adapter.isEnabled(i)==(i!=3)&&adapter.getItemViewType(i)==i%2,"Enabled states and view types retained");}check(adapter.getViewTypeCount()==2,"View type count retained");
   DataSetObserver o=new DataSetObserver();adapter.registerDataSetObserver(o);check(source.observer==o,"Observer registered on original");adapter.unregisterDataSetObserver(o);check(source.observer==null,"Observer removed from original");
   ViewGroup nested=new ViewGroup();nested.children.add(recycled);UiPalette.select("light");DialogListTint.tint(nested);check(recycled.color==0xff172b3a,"Nested native text tinted");check(untouchedTitle.color==123,"Unrelated title not recolored");
+  CheckedTextView choice=new CheckedTextView();choice.color=0xffffffff;UiPalette.select("light");DialogListTint.tint(choice);check(choice.color==0xff172b3a,"Single/multi-choice row tinted");
   System.out.println("DIALOG TINT HOST PASSED: "+checks+" checks (not Android device rendering)");
  }
 }
