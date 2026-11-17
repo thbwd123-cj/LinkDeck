@@ -15,9 +15,13 @@ public final class AuroraChecks {
    for(int bg:new int[]{base,surface,glass,key})for(int fg:new int[]{UiPalette.color(0xffedf5ff),UiPalette.color(0xffa4b3c8)})check(contrast(fg,bg)>=4.5,"Text contrast "+id+" "+Integer.toHexString(bg)+" = "+contrast(fg,bg));
    if(AuroraStyle.light())check(AuroraStyle.baseTop()==AuroraStyle.baseBottom(),"Light theme keeps a flat base");
    else check(luminance(AuroraStyle.baseTop())>luminance(AuroraStyle.baseBottom()),"Dark sky lifts toward the top "+id);
+   check(java.util.Arrays.equals(AuroraStyle.primaryStops(),new int[]{AuroraStyle.glowStart(),AuroraStyle.accent(),AuroraStyle.glowEnd()}),"Primary gradient runs glowStart, accent, glowEnd "+id);
+   check(contrast(AuroraStyle.PRIMARY_TEXT,AuroraStyle.glowStart())>=4.5,"Primary text readable on gradient start "+id);
+   check(contrast(AuroraStyle.PRIMARY_TEXT,AuroraStyle.glowEnd())>=3,"Primary text readable on gradient end "+id);
    check(contrast(AuroraStyle.accent(),surface)>=3,"Selected navigation visible "+id);
   }
   check(AuroraStyle.GREEN==0xff2ef2c4&&AuroraStyle.VIOLET==0xff7a5cff,"Prototype colors");
+  check(AuroraStyle.PRIMARY_TEXT==0xff03211b,"Prototype primary text ink");
   check(AuroraStyle.GREEN_ALPHA==.6f&&AuroraStyle.VIOLET_ALPHA==.52f,"Visible spot opacity");
   check(AuroraStyle.GREEN_DIAMETER==340&&AuroraStyle.VIOLET_DIAMETER==300&&AuroraStyle.SPOT_BLUR==46,"Spot geometry");
   check(AuroraStyle.GLASS_BLUR>=10&&AuroraStyle.GLASS_BLUR<=12,"Frost radius");

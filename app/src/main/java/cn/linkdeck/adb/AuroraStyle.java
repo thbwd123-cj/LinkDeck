@@ -7,7 +7,8 @@ public final class AuroraStyle {
  public static int baseBottom(){return base();}
  public static int accent(){return UiPalette.color(0xff4ce1cd);}
  public static int secondary(){return new int[]{0xff8874ed,0xff6caec5,0xff70a6df,0xffc27a79,0xff9189c7}[UiPalette.current()];}
- public static final int GREEN=0xff2ef2c4,VIOLET=0xff7a5cff;
+ public static final int GREEN=0xff2ef2c4,VIOLET=0xff7a5cff,PRIMARY_TEXT=0xff03211b;
+ public static int[] primaryStops(){return new int[]{glowStart(),accent(),glowEnd()};}
  public static final float GREEN_ALPHA=.6f,VIOLET_ALPHA=.52f,GLOW_ALPHA=.5f;
  public static final float GREEN_DIAMETER=340,VIOLET_DIAMETER=300,SPOT_BLUR=46,GLASS_BLUR=12,SPOT_FADE=.65f;
  public static final int GLASS_SHEEN_TOP=0x1cffffff,GLASS_SHEEN_MID=0x0bffffff,GLASS_SHEEN_BOTTOM=0x12ffffff;
