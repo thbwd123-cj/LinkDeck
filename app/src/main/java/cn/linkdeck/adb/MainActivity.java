@@ -921,17 +921,36 @@ public class MainActivity extends Activity {
     }).setNegativeButton("取消",null).setNeutralButton("支持范围",(d,w)->supportScope()).show();
   }
   private void brandGuide(){
-    String[] brands={"小米 / Redmi","海信 / VIDAA","TCL / 雷鸟","创维 / 酷开"};
+    String[] brands={"小米 / Redmi","海信 / VIDAA / Vidda","TCL / 雷鸟","创维 / 酷开","长虹","康佳","海尔 / 卡萨帝 / 统帅","华为智慧屏","荣耀智慧屏","乐视","联想","暴风","微鲸","PPTV"};
     new DeckDialogBuilder(this).setTitle("电视调试设置图示").setItems(brands,(d,w)->{
       String[][] steps={
         {"设置 → 账户与安全","查找并允许 ADB 调试","若找不到：关于设备中尝试连续选择版本或产品型号","查看电视 IP 和实际端口"},
         {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","如系统提供，开启 ADB / 网络调试","查看电视 IP 和实际端口"},
         {"设置 → 设备偏好设置 / 系统 → 关于","查找内部版本号或开发者选项","部分 Android TV 可连续选择内部版本号进入开发者模式","开启调试并查看 IP 与端口"},
-        {"设置 → 关于电视 / 系统信息","查找版本号及开发者选项","如系统提供，开启 ADB / 网络调试","查看电视 IP 和实际端口"}
+        {"设置 → 关于电视 / 系统信息","查找版本号及开发者选项","如系统提供，开启 ADB / 网络调试","查看电视 IP 和实际端口"},
+        {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","连续选择版本号进入开发者模式（如系统提供）","开启 ADB / 网络调试，查看电视 IP 和实际端口"},
+        {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","连续选择版本号进入开发者模式（如系统提供）","开启 ADB / 网络调试，查看电视 IP 和实际端口"},
+        {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","连续选择版本号进入开发者模式（如系统提供）","开启 ADB / 网络调试，查看电视 IP 和实际端口"},
+        {"设置 → 系统 → 关于本机","连续点击版本号开启开发者模式","在开发者选项中开启 ADB 调试（如系统提供）","查看电视 IP 和实际端口"},
+        {"设置 → 系统 → 关于本机","连续点击版本号开启开发者模式","在开发者选项中开启 ADB 调试（如系统提供）","查看电视 IP 和实际端口"},
+        {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","连续选择版本号进入开发者模式（如系统提供）","开启 ADB / 网络调试，查看电视 IP 和实际端口"},
+        {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","连续选择版本号进入开发者模式（如系统提供）","开启 ADB / 网络调试，查看电视 IP 和实际端口"},
+        {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","连续选择版本号进入开发者模式（如系统提供）","开启 ADB / 网络调试，查看电视 IP 和实际端口"},
+        {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","连续选择版本号进入开发者模式（如系统提供）","开启 ADB / 网络调试，查看电视 IP 和实际端口"},
+        {"设置 → 关于电视 / 本机信息","查找版本号或开发者选项","连续选择版本号进入开发者模式（如系统提供）","开启 ADB / 网络调试，查看电视 IP 和实际端口"}
       };
+      String[] notes={null,null,null,null,null,null,null,
+        "智慧屏为鸿蒙系统，遥控器多为蓝牙；红外只适配 S5/S6/S7、Vision 4 SE/5 SE/6 SE、B5/B3 等少数入门机型，其余机型请走 ADB 遥控。",
+        "智慧屏遥控器为蓝牙，没有红外遥控器；请走 ADB 遥控。",
+        "多为存量旧机型，部分机型系统版本较老，可能不提供 ADB。",
+        "多为较早期的智能电视，部分机型可能不提供 ADB。",
+        "多为存量旧机型，部分机型可能不提供 ADB。",
+        "多为存量旧机型，部分机型可能不提供 ADB。",
+        "多为存量旧机型，部分机型可能不提供 ADB。"};
       LinearLayout panel=column();panel.setPadding(dp(20),dp(10),dp(20),dp(10));
       panel.addView(text("以下是操作示意图，不是电视截图。不同型号、系统版本和地区的菜单可能不同，部分机型不提供 ADB。",13,MUTED));
       for(int i=0;i<steps[w].length;i++){gap(panel,8);TextView step=text((i+1)+"  "+steps[w][i],15,INK);step.setPadding(dp(14),dp(14),dp(14),dp(14));step.setBackground(shape(UiPalette.color(0xff203348),14));panel.addView(step,full());}
+      if(notes[w]!=null){gap(panel,10);panel.addView(text(notes[w],13,TEAL));}
       gap(panel,10);panel.addView(text("不要修改未知工厂设置；授权弹窗以电视实际显示为准。USB 调试不一定同时开启网络 ADB。",12,MUTED));
       ScrollView scroll=new ScrollView(this);scroll.addView(panel);
       new DeckDialogBuilder(this).setTitle(brands[w]+" · 设置示意").setView(scroll).setNegativeButton("关闭",null).setPositiveButton("返回品牌",(x,y)->brandGuide()).show();

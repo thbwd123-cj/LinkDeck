@@ -69,11 +69,11 @@ public final class IrCodes {
   private static String canonical(String name){
     String n=name.trim().toUpperCase(Locale.ROOT).replace('-','_').replace(' ','_');
     if(n.equals("VOLUMEUP")||n.equals("VOLUME_UP")||n.equals("VOLUP")||n.equals("VOL+"))return "VOL_UP";
-    if(n.equals("VOLUMEDOWN")||n.equals("VOLUME_DOWN")||n.equals("VOLDOWN")||n.equals("VOL_DN")||n.equals("VOL-")||n.equals("VOL_DOWN"))return "VOL_DOWN";
+    if(n.equals("VOLUMEDOWN")||n.equals("VOLUME_DOWN")||n.equals("VOLDOWN")||n.equals("VOL_DN")||n.equals("VOL-")||n.equals("VOL_")||n.equals("VOL_DOWN"))return "VOL_DOWN";
     if(n.equals("ENTER")||n.equals("SELECT"))return "OK";
     if(n.equals("EXIT")||n.equals("ESC"))return "BACK";
     if(n.equals("POWER_TOGGLE"))return "POWER";
-    if(n.equals("INPUT")||n.equals("INPUT_SOURCE")||n.equals("TV_INPUT"))return "SOURCE";
+    if(n.equals("INPUT")||n.equals("INPUT_SOURCE")||n.equals("TV_INPUT")||n.equals("TV_AV"))return "SOURCE";
     if(n.equals("CENTER"))return "OK";
     return n;
   }

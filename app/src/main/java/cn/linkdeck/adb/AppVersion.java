@@ -2,6 +2,6 @@ package cn.linkdeck.adb;
 
 /** Shared display and report version; build.py checks it against APK metadata. */
 public final class AppVersion {
-  public static final String NAME = "0.19.14";
+  public static final String NAME = "0.19.15";
   private AppVersion() {}
 }

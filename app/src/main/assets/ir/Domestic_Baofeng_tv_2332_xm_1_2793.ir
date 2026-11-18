@@ -1,0 +1,90 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://raw.githubusercontent.com/flipperdevices/IRDB/dev/database/categories/TVs/Baofeng_tv/Baofeng_tv_2332_xm_1_2793/Baofeng_tv_2332_xm_1_2793.ir
+# License: MIT (flipperdevices/IRDB) — see licenses/Flipper-Official-IRDB-MIT.txt
+# Bundled for LinkDeck 0.19.15: keys renamed to the app's canonical names, non-13 keys stripped; codes unchanged from source.
+# Keys verified against IrCodes.fromFlipper rules (NEC/NECext/Samsung32/raw only, <=20 keys, <=64KB).
+# NOT yet verified on a physical TV — treat as candidate until a user confirms it on their set.
+#
+name: DOWN
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 0E F1 00 00
+# 
+#
+name: HOME
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 16 E9 00 00
+# 
+#
+name: UP
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 0B F4 00 00
+# 
+#
+name: POWER
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 0A F5 00 00
+# 
+#
+name: VOL_DOWN
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 1C E3 00 00
+# 
+#
+name: BACK
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 37 C8 00 00
+# 
+#
+name: OK
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 0D F2 00 00
+# 
+#
+name: SOURCE
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: BF 40 00 00
+# 
+#
+name: VOL_UP
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 15 EA 00 00
+# 
+#
+name: RIGHT
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 11 EE 00 00
+# 
+#
+name: MENU
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 40 BF 00 00
+# 
+#
+name: LEFT
+type: parsed
+protocol: NECext
+address: 40 40 00 00
+command: 10 EF 00 00

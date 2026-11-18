@@ -1,0 +1,97 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://raw.githubusercontent.com/flipperdevices/IRDB/dev/database/categories/TVs/Lenovo/Lenovo_594_xm_1_567/Lenovo_594_xm_1_567.ir
+# License: MIT (flipperdevices/IRDB) — see licenses/Flipper-Official-IRDB-MIT.txt
+# Bundled for LinkDeck 0.19.15: keys renamed to the app's canonical names, non-13 keys stripped; codes unchanged from source.
+# Keys verified against IrCodes.fromFlipper rules (NEC/NECext/Samsung32/raw only, <=20 keys, <=64KB).
+# NOT yet verified on a physical TV — treat as candidate until a user confirms it on their set.
+#
+name: DOWN
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 51 AE 00 00
+# 
+#
+name: HOME
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: B7 48 00 00
+# 
+#
+name: UP
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 52 AD 00 00
+# 
+#
+name: POWER
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 8E 71 00 00
+# 
+#
+name: VOL_DOWN
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 72 8D 00 00
+# 
+#
+name: BACK
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 9E 61 00 00
+# 
+#
+name: OK
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 28 D7 00 00
+# 
+#
+name: SOURCE
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: BA 45 00 00
+# 
+#
+name: VOL_UP
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 73 8C 00 00
+# 
+#
+name: RIGHT
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 4F B0 00 00
+# 
+#
+name: MENU
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 9F 60 00 00
+# 
+#
+name: MUTE
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 71 8E 00 00
+# 
+#
+name: LEFT
+type: parsed
+protocol: NECext
+address: 17 EF 00 00
+command: 50 AF 00 00
