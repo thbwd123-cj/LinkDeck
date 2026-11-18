@@ -6,7 +6,7 @@ Usage: python3 build.py [--toolchain /path/to/existing/toolchain]
 import argparse, hashlib, os, pathlib, shutil, subprocess, urllib.request, zipfile, re
 
 ROOT=pathlib.Path(__file__).resolve().parent
-VERSION='0.19.12'
+VERSION='0.19.13'
 assert re.search(r'NAME = \"'+re.escape(VERSION)+r'\"', (ROOT/'app/src/main/java/cn/linkdeck/adb/AppVersion.java').read_text()), 'UI/report version differs from APK version'
 parser=argparse.ArgumentParser();parser.add_argument('--toolchain',type=pathlib.Path,default=ROOT/'.toolchain');parser.add_argument('--release-keystore',type=pathlib.Path);parser.add_argument('--release-alias',default='linkdeck');parser.add_argument('--storepass-env',default='LINKDECK_STORE_PASSWORD');parser.add_argument('--keypass-env',default='LINKDECK_KEY_PASSWORD');args=parser.parse_args()
 TC=args.toolchain.resolve();TC.mkdir(parents=True,exist_ok=True)
@@ -55,7 +55,7 @@ with zipfile.ZipFile(BUILD/'classes.jar','w') as z:
     for p in (BUILD/'classes').rglob('*.class'):z.write(p,p.relative_to(BUILD/'classes'))
 run(JAVA,'-cp',R8,'com.android.tools.r8.D8','--release','--min-api','26','--lib',ANDROID,'--output',BUILD/'dex',BUILD/'classes.jar',CONSCRYPT,SPAKE)
 run(BT/'aapt2','compile','--dir',ROOT/'app/src/main/res','-o',BUILD/'resources.zip')
-run(BT/'aapt2','link','-o',BUILD/'unsigned.apk','-I',ANDROID,'--manifest',ROOT/'app/src/main/AndroidManifest.xml','--version-code','60','--version-name',VERSION,'-A',ROOT/'app/src/main/assets',BUILD/'resources.zip')
+run(BT/'aapt2','link','-o',BUILD/'unsigned.apk','-I',ANDROID,'--manifest',ROOT/'app/src/main/AndroidManifest.xml','--version-code','61','--version-name',VERSION,'-A',ROOT/'app/src/main/assets',BUILD/'resources.zip')
 with zipfile.ZipFile(BUILD/'unsigned.apk','a',compression=zipfile.ZIP_DEFLATED) as z:
     for p in (BUILD/'dex').glob('*.dex'):z.write(p,p.name)
     for p in (ROOT/'third_party/conscrypt/jni').rglob('*.so'):z.write(p,'lib/'+str(p.relative_to(ROOT/'third_party/conscrypt/jni')))

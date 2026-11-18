@@ -30,7 +30,7 @@ public class AerialUiChecks extends RuntimeChecks {
   File second=asset("aerial-standard.apk");Object old=plan(second,source,20);reject(()->call("validateAerialArchive",new Class[]{c},old),"full official APK rejected for Android 4.x");
   Object wrongPackage=plan(new File(getTargetContext().getApplicationInfo().sourceDir),source,22);reject(()->call("validateAerialArchive",new Class[]{c},wrongPackage),"downloaded package must be actual Aerial");
   call("showAerialPlan",new Class[]{c},p);dialogTap("查看检查详情  ﹀");waitFor("prepared plan distinguishes install support and desktop takeover",()->dialogHas("安装到电视")&&dialogHas("不保证主页键"));shot("v08-aerial-plan");dialogTap("取消");waitFor("cancel clears prepared APK",()->!apk.exists());
-  call("aerialOptions",new Class[]{});waitFor("manual variant options available",()->dialogHas("手动选版本"));shot("v08-aerial-options");dialogTap("关闭");
+  call("versionManager",new Class[]{});waitFor("version management offers history and rollback",()->dialogHas("历史版本与回退"));shot("v08-aerial-options");dialogTap("关闭");
   second.delete();jsonFile.delete();result.putString("stream","AERIAL NATIVE QA PASSED: "+passes+" checks.\n");finish(-1,result);
  }catch(Throwable t){result.putString("stream",android.util.Log.getStackTraceString(t));finish(0,result);}}
 }

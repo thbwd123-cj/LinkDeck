@@ -7,7 +7,7 @@ public class PinnedDownloadChecks{
  static File fixture()throws IOException{File f=Files.createTempFile("digest-test", ".apk").toFile();Files.write(f.toPath(),apk);f.deleteOnExit();return f;}
  public static void main(String[] args)throws Exception{
   URL.setURLStreamHandlerFactory(p->p.equals("https")?new URLStreamHandler(){protected URLConnection openConnection(URL u){return new Mock(u);}}:null);
-  AerialDownload.Asset a=AerialDownload.pinnedMetadata(AerialVersionChecks.release("v1.73","standard").toString(),"standard","v1.73");File f=Files.createTempFile("pinned-test", ".apk").toFile();
+  AerialDownload.Asset a=AerialDownload.pinnedMetadata(AerialReleaseChecks.release("v1.73","standard").toString(),"standard","v1.73");File f=Files.createTempFile("pinned-test", ".apk").toFile();
   a.digest="";requests.clear();try{AerialDownload.downloadAsset(a,"standard",f,s->{});throw new AssertionError("missing digest accepted");}catch(IOException expected){ok(requests.isEmpty(),"missing digest prevents all downloads");}
   a.digest=AerialDownload.sha256(fixture());
   AerialDownload.downloadAsset(a,"standard",f,s->{});ok(f.length()==4&&requests.get(0).contains("/v1.73/"),"fixed release download uses selected immutable route");

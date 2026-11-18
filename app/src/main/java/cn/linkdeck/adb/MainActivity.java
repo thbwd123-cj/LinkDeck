@@ -228,7 +228,6 @@ public class MainActivity extends Activity {
     if (connectionDialog != null) connectionDialog.dismiss();
     if (commandResultDialog != null) commandResultDialog.dismiss();
     if (aerialDialog != null) aerialDialog.dismiss();
-    if (stableDialog != null) stableDialog.dismiss();
     if (desktopDialog != null) desktopDialog.dismiss();
     if (aerialPlan != null) aerialPlan.file.delete();
     if(aerialCenterDialog!=null)aerialCenterDialog.dismiss();
@@ -3335,7 +3334,6 @@ public class MainActivity extends Activity {
         for(File f:plan.files){plan.total+=f.length();plan.hashes.add(AerialDownload.sha256(f));}
         AerialProbe.Properties tv=AerialProbe.properties(c->plan.client.shell(c));plan.sdk=tv.sdk;plan.abis=tv.abis;plan.identity=DeviceScope.installationKey(host,prefs.getString("port","5555"),tv.serial,tv.fingerprint,tv.model);
         if(DesktopAssistant.activeUser(plan.client.shell("dumpsys accessibility").require())!=0)throw new IOException("当前电视用户未确认或非用户 0，未准备更新");
-        if(plan.pkg.equals(AerialSupport.FULL)||plan.pkg.equals(AerialSupport.LITE)){JSONObject profile=AerialProfiles.get(profileText(),DesktopAssistant.identity(plan.endpoint,tv.serial,tv.fingerprint,tv.model),plan.pkg);if(profile!=null&&profile.optBoolean("hold")&&!AerialProfiles.verified(profile,plan.code,plan.hashes.get(0)))throw new IOException("此电视的 Aerial 已暂缓版本切换，请到 Aerial 桌面管理评估单次更新；没有解除暂缓或卸载旧版");}
         plan.before=genericState(plan.client,plan.pkg,true);InstallPolicy.check(expected,plan.pkg,plan.code,plan.before.present,plan.before.code,plan.before.signers,plan.signers,plan.minimum,plan.sdk,ApkTransfer.abis(plan.files),plan.abis);
   }
   private void showGenericPlan(GenericPlan plan){
@@ -3966,9 +3964,6 @@ public class MainActivity extends Activity {
     b.show();
   }
 
-  private AlertDialog stableDialog;
-  private String profileText(){return prefs.getString("aerial_profiles_v1","");}
-  private void saveProfileText(String text)throws IOException{if(!prefs.edit().putString("aerial_profiles_v1",text).commit())throw new IOException("稳定版本记录未保存，请重试");}
   private static String signerSet(PackageInfo pi)throws Exception{
     android.content.pm.Signature[] signatures=Build.VERSION.SDK_INT>=28&&pi.signingInfo!=null?pi.signingInfo.getApkContentsSigners():pi.signatures;
     if(signatures==null||signatures.length==0)throw new IOException("无法读取安装包签名");TreeSet<String> values=new TreeSet<>();
@@ -3996,45 +3991,6 @@ public class MainActivity extends Activity {
   private String installationIdentity(ApkTransfer.Device d,AerialProbe.Properties info,String endpoint)throws Exception{
     if(DesktopAssistant.activeUser(d.shell("dumpsys accessibility"))!=0)throw new IOException("当前 Android 用户未确认或非用户 0，未准备安装");
     return DesktopAssistant.identity(endpoint,info.serial,info.fingerprint,info.model);
-  }
-  private void stableManager(){
-    closeAerialCenter();
-    if(busy){toast("请等待当前任务完成");return;}if(!requestConnection())return;
-    final AdbClient target=adb;final String endpoint=host+":"+prefs.getString("port","5555");final DesktopAssistant.Snapshot[] state={null};final InstalledProof[] proof={null};
-    run("读取本机稳定版本",()->{
-      state[0]=DesktopAssistant.inspect(c->target.shell(c,8000).require(),endpoint);if(state[0].userId!=0)throw new IOException("当前用户未确认或非用户 0");
-      String pkg=AerialSupport.packageName(AerialSupport.variant(state[0].sdk));proof[0]=installedProof(target,pkg);return "";
-    },()->showStableManager(target,endpoint,state[0],proof[0]));
-  }
-  private void showStableManager(AdbClient target,String endpoint,DesktopAssistant.Snapshot snapshot,InstalledProof proof){
-    try{
-      JSONObject record=AerialProfiles.get(profileText(),snapshot.id,proof.pkg);String text="电视："+snapshot.model+"\n当前安装："+proof.name+"（"+proof.code+"）\n\n"+AerialProfiles.description(record)+"\n\n"+(AerialProfiles.verified(record,proof.code,proof.sha)?"当前安装包与本机已验证指纹一致。":"当前安装包尚未标记为本机已验证。")+"\n标记来自你的实际使用确认，不代表其他电视或后续版本的兼容性。";
-      LinearLayout panel=column();panel.setPadding(dp(22),dp(8),dp(22),dp(8));TextView info=text(text,14,INK);info.setTextIsSelectable(true);panel.addView(info);
-      addButton(panel,"标记当前版本已验证",true,()->confirmStable(target,endpoint,snapshot,proof));
-      if(record!=null){boolean next=!record.optBoolean("hold");addButton(panel,next?"暂缓切换未验证安装包":"恢复升级评估",false,()->{
-        new DeckDialogBuilder(this).setTitle(next?"暂缓升级？":"恢复升级评估？").setMessage("只修改这台电视的轻连版本记录。安装仍需逐次确认，不会自动升级电视。")
-          .setNegativeButton("取消",null).setPositiveButton("确认",(d,w)->run("保存本机版本偏好",()->{
-            if(adb!=target)throw new IOException("连接已变化");DesktopAssistant.Snapshot fresh=DesktopAssistant.inspect(c->target.shell(c,8000).require(),endpoint);if(!fresh.id.equals(snapshot.id))throw new IOException("电视身份已变化");
-            saveProfileText(AerialProfiles.hold(profileText(),snapshot.id,proof.pkg,next));return "已保存本机版本偏好";
-          },()->showStableManager(target,endpoint,snapshot,proof))).show();
-      });
-      if(!record.optString("tag").isEmpty())addButton(panel,"评估回到已验证发布版本",false,()->checkAerial("auto",record.optString("tag")));}
-      ScrollView scroll=new ScrollView(this);scroll.addView(panel);if(stableDialog!=null)stableDialog.dismiss();stableDialog=new DeckDialogBuilder(this).setTitle("本机稳定版本").setView(scroll).setNegativeButton("关闭",null).create();stableDialog.show();
-    }catch(Exception e){dialog("稳定版本记录未读取",message(e));}
-  }
-  private void confirmStable(AdbClient target,String endpoint,DesktopAssistant.Snapshot snapshot,InstalledProof displayed){
-    if(busy){toast("请等待当前任务完成");return;}
-    LinearLayout body=column();body.setPadding(dp(22),dp(8),dp(22),dp(8));body.addView(text("将重新核对当前电视与安装包，保存本机验证记录并暂缓切换未验证安装包。",14,INK));
-    CheckBox runOk=new CheckBox(this),homeOk=new CheckBox(this),bootOk=new CheckBox(this);runOk.setText("我已确认持续使用正常、没有闪退");homeOk.setText("我已用实体遥控器确认主页键正常");bootOk.setText("我还确认了电视重启后正常（可选）");body.addView(runOk);body.addView(homeOk);body.addView(bootOk);
-    AlertDialog confirm=new DeckDialogBuilder(this).setTitle("记录本机已验证版本").setView(body).setNegativeButton("取消",null).setPositiveButton("核对并保存",null).create();confirm.setOnShowListener(d->confirm.getButton(-1).setOnClickListener(v->{
-      if(!runOk.isChecked()||!homeOk.isChecked()){toast("请先完成持续使用和实体主页键确认");return;}final boolean boot=bootOk.isChecked();confirm.dismiss();final DesktopAssistant.Snapshot[] savedState={null};final InstalledProof[] savedProof={null};
-      run("记录本机已验证版本",()->{
-        if(adb!=target)throw new IOException("连接已变化");DesktopAssistant.Snapshot fresh=DesktopAssistant.inspect(c->target.shell(c,8000).require(),endpoint);if(!fresh.id.equals(snapshot.id)||fresh.userId!=0)throw new IOException("电视或用户已变化");
-        InstalledProof actual=installedProof(target,displayed.pkg);if(actual.code!=displayed.code||!actual.sha.equals(displayed.sha))throw new IOException("安装包已变化，请重新打开稳定版本管理");
-        String tag="";if(actual.pkg.equals(AerialSupport.FULL))try{tag=AerialDownload.releaseTag(actual.name.replaceFirst("-(?:guard|standard)$",""));}catch(IOException ignored){}
-        saveProfileText(AerialProfiles.mark(profileText(),fresh.id,actual.pkg,actual.code,actual.name,actual.sha,actual.signers,tag,fresh.sdk,true,true,boot,System.currentTimeMillis()));savedState[0]=fresh;savedProof[0]=actual;return "已记录本机稳定安装包，并暂缓切换未验证安装包";
-      },()->showStableManager(target,endpoint,savedState[0],savedProof[0]));
-    }));confirm.show();
   }
   private void historicalOptions(){
     closeAerialCenter();
@@ -4069,20 +4025,24 @@ public class MainActivity extends Activity {
     if(r.last()!=null)list.addView(text("电视："+r.last().model+"\nAerial："+r.last().version+"\n已完成 "+r.samples.size()+" / 3 次只读观察",14,MUTED));
     if(v.state.equals(DesktopDiagnostic.CRASH))addButton(list,"选择官方版本或回退",true,()->historicalOptions());
     else if(v.state.equals(DesktopDiagnostic.MISSING))addButton(list,"查看具体配置与修复项",true,()->showDesktopPanel());
-    else if(v.state.equals(DesktopDiagnostic.NORMAL))addButton(list,"管理本机稳定版本",true,()->stableManager());
     else if(r.last()!=null)addButton(list,"查看已读到的详细状态",true,()->showDesktopPanel());
     else addButton(list,"重新采集",true,()->captureDesktopFault());
     addButton(list,"导出本次故障报告",false,()->exportFaultReport(DesktopDiagnostic.report(r)));addButton(list,"查看完整脱敏报告",false,()->dialog("故障报告",DesktopDiagnostic.report(r)));
     ScrollView scroll=new ScrollView(this);scroll.addView(list);new DeckDialogBuilder(this).setTitle("检查结果").setView(scroll).setNegativeButton("关闭",null).show();
   }
   private void exportFaultReport(String report){run("准备故障报告导出",()->{writeDesktopFile(faultReportFile(true),report);return "";},()->createDocument(107,"text/plain","LinkDeck_Fault_"+System.currentTimeMillis()+".txt"));}
-  private void lastFaultReport(){
-    closeAerialCenter();final String[] report={null};run("读取上次故障报告",()->{report[0]=readDesktopFile(faultReportFile(false));return "";},()->new DeckDialogBuilder(this).setTitle("上次故障报告（历史记录）").setMessage(report[0]).setNegativeButton("关闭",null).setPositiveButton("导出 TXT",(d,w)->exportFaultReport(report[0])).show());}
+  private void faultReport(){
+    closeAerialCenter();if(desktopDialog!=null)desktopDialog.dismiss();
+    if(!faultReportFile(false).exists()){
+      new DeckDialogBuilder(this).setTitle("故障报告").setMessage("暂无故障报告。").setNegativeButton("关闭",null).setPositiveButton("立即采集",(d,w)->captureDesktopFault()).show();return;
+    }
+    final String[] report={null};run("读取上次故障报告",()->{report[0]=readDesktopFile(faultReportFile(false));return "";},()->new DeckDialogBuilder(this).setTitle("故障报告").setMessage(report[0]).setNegativeButton("关闭",null).setNeutralButton("导出 TXT",(d,w)->exportFaultReport(report[0])).setPositiveButton("重新采集",(d,w)->captureDesktopFault()).show());
+  }
 
   private static final class AerialPlan {
     File file;AdbClient client;AerialDownload.Asset asset;AerialInstaller.Installed installed;
-    String variant,pkg,version,host,port,brand,abis,model,id,sha,signers,installedSigners,profileRevision;
-    JSONObject profile;String selectedTag;boolean transition,overrideHold,downgradeConfirmed,signatureVerified,deferred;
+    String variant,pkg,version,host,port,brand,abis,model,id,sha,signers,installedSigners;
+    String selectedTag;boolean transition,downgradeConfirmed,signatureVerified;
     int sdk,minimum,decision;long code;boolean consumed,explicit;
   }
   private volatile AerialPlan aerialPlan;
@@ -4092,17 +4052,15 @@ public class MainActivity extends Activity {
     LinearLayout c=card(parent),r=row();r.addView(new TvScene(this,true),new LinearLayout.LayoutParams(dp(57),dp(57)));
     LinearLayout copy=column();copy.setPadding(dp(12),0,0,0);TextView title=text("Aerial TV",18,INK);title.setTypeface(null,Typeface.BOLD);copy.addView(title);gap(copy,5);String state="官方安装 · 桌面与版本管理";if(connected()&&desktopClient==adb&&desktopSnapshot!=null&&desktopSnapshot.installed)state="上次读取："+desktopSnapshot.version+" · 状态需复查";copy.addView(text(state,11,MUTED));r.addView(copy,new LinearLayout.LayoutParams(0,-2,1));c.addView(r);
     pair(c,"检查更新",()->checkAerial("auto"),"桌面助手",()->checkDesktop());
-    TextView toggle=button("版本管理与故障采集  ﹀",false,()->{});toggle.setTextSize(12);toggle.setMinHeight(dp(40));toggle.setPadding(dp(8),dp(8),dp(8),dp(8));LinearLayout tools=column();tools.setVisibility(View.GONE);LinearLayout.LayoutParams tp=full();tp.topMargin=dp(7);c.addView(toggle,tp);c.addView(tools);
-    pair(tools,"历史版本与回退",()->historicalOptions(),"本机稳定版本",()->stableManager());pair(tools,"一键故障采集",()->captureDesktopFault(),"上次故障报告",()->lastFaultReport());addButton(tools,"版本选择与支持说明",false,()->aerialOptions());toggle.setOnClickListener(v->{boolean open=tools.getVisibility()!=View.VISIBLE;tools.setVisibility(open?View.VISIBLE:View.GONE);toggle.setText(open?"收起版本工具  ﹀":"版本管理与故障采集  ›");});
+    pair(c,"版本管理",()->versionManager(),"故障报告",()->faultReport());
   }
 
-  private void aerialOptions() {
+  private void versionManager() {
     closeAerialCenter();
-    new DeckDialogBuilder(this).setTitle("Aerial 版本与支持说明")
-      .setMessage("Android 5.0+：默认使用标准版。固件明确禁止安装桌面类应用时，可手动尝试守护版。\nAndroid 4.0–4.4：自动选择 Lite。\n\n当前入口只负责官方 APK 安装、更新和版本核验。不会停用原桌面，不会自动修改无障碍、屏保或默认桌面设置；已安装 Aerial 的既有设置由它自身保留。旧酷开固件的主页键和开机接管需另行验证。")
+    new DeckDialogBuilder(this).setTitle("版本管理")
+      .setMessage("Android 5.0+：默认使用标准版。固件明确禁止安装桌面类应用时，可手动尝试守护版。\nAndroid 4.0–4.4：自动选择 Lite。\n\n只负责官方 APK 安装、更新和版本核验。不会停用原桌面，不会自动修改无障碍、屏保或默认桌面设置；已安装 Aerial 的既有设置由它自身保留。旧酷开固件的主页键和开机接管需另行验证。")
       .setNegativeButton("关闭",null)
-      .setNeutralButton("手动选版本",(d,w)->new DeckDialogBuilder(this).setTitle("选择 Aerial 安装类型").setItems(new String[]{"标准版 · Android 5.0+","守护版 · 固件拦截标准版时","Lite · 仅 Android 4.0–4.4"},(dialog,index)->checkAerial(new String[]{"standard","guard","lite"}[index])).show())
-      .setPositiveButton("自动选择",(d,w)->checkAerial("auto")).show();
+      .setPositiveButton("历史版本与回退",(d,w)->historicalOptions()).show();
   }
 
   private ApkTransfer.Device aerialDevice(AdbClient client) {
@@ -4121,8 +4079,7 @@ public class MainActivity extends Activity {
   private static long packageVersion(PackageInfo pi) {return Build.VERSION.SDK_INT>=28?pi.getLongVersionCode():pi.versionCode&0xffffffffL;}
 
   private void checkAerial(String requested) {checkAerial(requested,null);}
-  private void checkAerial(String requested,String selectedTag) {checkAerial(requested,selectedTag,false);}
-  private void checkAerial(String requested,String selectedTag,boolean evaluateHeld) {
+  private void checkAerial(String requested,String selectedTag) {
     closeAerialCenter();
     if(busy){toast("请等待当前任务完成");return;}
     if(!requestConnection())return;
@@ -4143,8 +4100,6 @@ public class MainActivity extends Activity {
         plan.abis=info.abis;plan.brand=info.brand;plan.model=info.model;
         if(plan.installed.present&&plan.installed.code<0)throw new IOException("检测到已装 Aerial，但无法读取当前版本，已停止覆盖安装。\n"+plan.installed.dump);
         plan.id=installationIdentity(target,info,plan.host+":"+plan.port);
-        plan.profile=AerialProfiles.get(profileText(),plan.id,plan.pkg);plan.profileRevision=AerialProfiles.revision(plan.profile);
-        if(requested.equals("auto")&&selectedTag==null&&!evaluateHeld&&plan.profile!=null&&plan.profile.optBoolean("hold")){plan.deferred=true;aerialPlan=plan;return AerialProfiles.description(plan.profile);}
         if(plan.installed.present){InstalledProof existing=installedProof(plan.client,plan.pkg);if(existing.code!=plan.installed.code)throw new IOException("电视已装版本变化");plan.installedSigners=existing.signers;if(requested.equals("auto")&&plan.sdk>=21)plan.variant=existing.homeCategory?"standard":"guard";}
         plan.asset=selectedTag==null?AerialDownload.download(plan.variant,plan.file,stage->taskProgress(stage)):AerialDownload.downloadPinned(selectedTag,plan.variant,plan.file,stage->taskProgress(stage));
         validateAerialArchive(plan);
@@ -4155,7 +4110,7 @@ public class MainActivity extends Activity {
         aerialPlan=plan;
         return aerialReport(plan);
       }catch(Exception e){plan.file.delete();throw e;}
-    },()->{if(plan.deferred)showHeldVersion(plan);else showAerialPlan(plan);});
+    },()->showAerialPlan(plan));
   }
 
   private void validateAerialArchive(AerialPlan plan)throws Exception {
@@ -4169,13 +4124,9 @@ public class MainActivity extends Activity {
 
   private String aerialReport(AerialPlan p) {
     String state=p.decision==-1?"可以安装":p.decision==1?"发现可用更新":p.decision==0?"已是同一版本":p.asset.pinned?"所选版本较旧：仅可手动尝试保留数据回退":"电视上版本更高，本次不会降级";
-    return "电视："+p.model+" · "+ApkManifest.android(p.sdk)+"\n架构："+p.abis+"\n选择："+AerialSupport.title(p.variant)+"\n已安装："+(p.installed.present?p.installed.name+"（"+p.installed.code+"）":"未安装")+"\n官方安装包："+p.version+"（"+p.code+"） · "+size(p.file.length())+"\n发布："+p.asset.tag+(p.asset.pinned?"（固定发布，不回退到最新版）":"")+"\n\n"+AerialProfiles.description(p.profile)+"\n候选状态："+(AerialProfiles.verified(p.profile,p.code,p.sha)?"与本机已验证安装包一致":"本机待验证")+"\n签名："+(p.installed.present?(p.signatureVerified?"与电视已安装证书一致":"尚未确认"):"首次安装，以官方来源和系统校验为准")+"\n\n"+state+"\n最低要求："+ApkManifest.android(p.minimum)+"\n"+(p.asset.digest.isEmpty()?"来自官方 HTTPS 地址；本次未取得官方文件摘要。":"已匹配官方发布的 SHA-256。")+"\n\n"+AerialSupport.limitations(p.sdk,p.brand)+"\n\n更新使用覆盖安装，保留应用数据；签名不一致时会停止，不会自动卸载旧版。";
+    return "电视："+p.model+" · "+ApkManifest.android(p.sdk)+"\n架构："+p.abis+"\n选择："+AerialSupport.title(p.variant)+"\n已安装："+(p.installed.present?p.installed.name+"（"+p.installed.code+"）":"未安装")+"\n官方安装包："+p.version+"（"+p.code+"） · "+size(p.file.length())+"\n发布："+p.asset.tag+(p.asset.pinned?"（固定发布，不回退到最新版）":"")+"\n签名："+(p.installed.present?(p.signatureVerified?"与电视已安装证书一致":"尚未确认"):"首次安装，以官方来源和系统校验为准")+"\n\n"+state+"\n最低要求："+ApkManifest.android(p.minimum)+"\n"+(p.asset.digest.isEmpty()?"来自官方 HTTPS 地址；本次未取得官方文件摘要。":"已匹配官方发布的 SHA-256。")+"\n\n"+AerialSupport.limitations(p.sdk,p.brand)+"\n\n更新使用覆盖安装，保留应用数据；签名不一致时会停止，不会自动卸载旧版。";
   }
 
-  private void showHeldVersion(AerialPlan plan){
-    new DeckDialogBuilder(this).setTitle("本机已暂缓版本切换").setMessage(AerialProfiles.description(plan.profile)+"\n当前安装："+plan.installed.name+"（"+plan.installed.code+"）\n\n本次未下载新版。当前安装包指纹可在稳定版本管理中核对；你仍可主动评估新版本，安装前再次确认。")
-      .setNegativeButton("关闭",null).setNeutralButton("稳定版本管理",(d,w)->stableManager()).setPositiveButton("本次评估最新版",(d,w)->checkAerial("auto",null,true)).show();
-  }
   private void showAerialPlan(AerialPlan plan) {
     if(aerialDialog!=null)aerialDialog.dismiss();
     LinearLayout panel=column();panel.setPadding(dp(18),0,dp(18),dp(4));
@@ -4184,7 +4135,6 @@ public class MainActivity extends Activity {
     sheetRow(content,"目标版本",plan.version,INK);
     sheetRow(content,"电视系统",ApkManifest.android(plan.sdk),INK);
     sheetRow(content,"签名校验",plan.installed.present?(plan.signatureVerified?"与电视一致":"尚未确认"):"首次安装，由系统核验",plan.installed.present&&plan.signatureVerified?TEAL:UiPalette.color(0xffffcf80));
-    sheetRow(content,"候选状态",AerialProfiles.verified(plan.profile,plan.code,plan.sha)?"与本机验证指纹一致":"本机待验证",AerialProfiles.verified(plan.profile,plan.code,plan.sha)?TEAL:UiPalette.color(0xffffcf80));
     gap(content,10);TextView hint=text("安装要求符合不等于实际稳定。主页键、开机与持续运行仍需实测。",12,UiPalette.color(0xffffcf80));hint.setPadding(dp(12),dp(10),dp(12),dp(10));hint.setBackground(shape(UiPalette.color(0xff3d3326),12));gap(content,8);
     TextView details=button("查看检查详情  ﹀",false,()->{});details.setTextSize(12);TextView report=text(aerialReport(plan),13,MUTED);report.setTextIsSelectable(true);report.setPadding(0,dp(12),0,dp(8));report.setVisibility(View.GONE);details.setOnClickListener(v->{boolean expand=report.getVisibility()!=View.VISIBLE;report.setVisibility(expand?View.VISIBLE:View.GONE);details.setText(expand?"收起检查详情  ﹀":"查看检查详情  ›");});content.addView(details);content.addView(report);
     ScrollView scroll=new ScrollView(this);scroll.setPadding(0,0,dp(7),0);scroll.addView(content);int reserved=dp(330+60*Math.max(0,getResources().getConfiguration().fontScale-1));panel.addView(scroll,new LinearLayout.LayoutParams(-1,Math.min(dp(330),Math.max(dp(110),getResources().getDisplayMetrics().heightPixels-reserved))));gap(panel,8);panel.addView(hint);
@@ -4198,12 +4148,11 @@ public class MainActivity extends Activity {
   private void sheetRow(LinearLayout parent,String label,String value,int color){LinearLayout row=row();row.setPadding(dp(2),dp(7),dp(2),dp(7));TextView left=text(label,13,MUTED);row.addView(left,new LinearLayout.LayoutParams(0,-2,1));TextView right=text(value,13,color);right.setGravity(Gravity.RIGHT);right.setMaxWidth(dp(190));row.addView(right);parent.addView(row);View divider=new View(this);divider.setBackgroundColor(LINE);parent.addView(divider,new LinearLayout.LayoutParams(-1,dp(1)));}
 
   private void reviewAerialInstall(AerialPlan plan){
-    boolean held=AerialProfiles.blocked(plan.profile,plan.code,plan.sha),rollback=plan.decision==2;
-    if(!held&&!rollback){installAerial(plan);return;}plan.transition=true;
-    String text=(held?"这台电视已暂缓切换未验证安装包。\n"+AerialProfiles.description(plan.profile)+"\n本次候选为 "+plan.version+"，尚未在本机验证。仅放行这一次，不解除全局暂缓。\n\n":"")
-      +(rollback?"将尝试 pm install -r -d，保留应用数据降级。签名必须一致，但电视可能拒绝；拒绝后停止，不会转为卸载或清除数据。旧版本能否读取新版数据仍未知，轻连无法完整备份 Aerial 私有数据。\n\n":"")+"确认后才会传输并请求安装；取消则清理本次下载。";
-    AlertDialog confirm=new DeckDialogBuilder(this).setTitle(rollback?"确认本次保留数据回退":"确认切换待验证版本").setMessage(text).setNegativeButton("取消",null)
-      .setPositiveButton(rollback?"理解限制，尝试回退":"仅本次继续",(d,w)->{plan.overrideHold=held;plan.downgradeConfirmed=rollback;installAerial(plan);}).create();aerialDialog=confirm;
+    boolean rollback=plan.decision==2;
+    if(!rollback){installAerial(plan);return;}plan.transition=true;
+    String text="将尝试 pm install -r -d，保留应用数据降级。签名必须一致，但电视可能拒绝；拒绝后停止，不会转为卸载或清除数据。旧版本能否读取新版数据仍未知，轻连无法完整备份 Aerial 私有数据。\n\n确认后才会传输并请求安装；取消则清理本次下载。";
+    AlertDialog confirm=new DeckDialogBuilder(this).setTitle("确认本次保留数据回退").setMessage(text).setNegativeButton("取消",null)
+      .setPositiveButton("理解限制，尝试回退",(d,w)->{plan.downgradeConfirmed=rollback;installAerial(plan);}).create();aerialDialog=confirm;
     confirm.setOnDismissListener(d->{if(!plan.consumed)plan.file.delete();if(aerialDialog==confirm)aerialDialog=null;});confirm.show();
   }
   private void installAerial(AerialPlan plan) {
@@ -4219,7 +4168,6 @@ public class MainActivity extends Activity {
         AerialProbe.Properties info=AerialProbe.properties(c->plan.client.shell(c));int sdk=info.sdk;String abis=info.abis;
         AerialSupport.validateVariant(plan.variant,sdk);
         String id=installationIdentity(target,info,plan.host+":"+plan.port);if(!id.equals(plan.id))throw new IOException("电视身份已变化，未安装");
-        AerialProfiles.allow(AerialProfiles.get(profileText(),plan.id,plan.pkg),plan.profileRevision,plan.code,plan.sha,plan.overrideHold);
         if(plan.installed.present){InstalledProof current=installedProof(plan.client,plan.pkg);if(current.code!=plan.installed.code)throw new IOException("电视现有版本变化");AerialSafety.sameSigners(current.signers,plan.signers);}
         if(plan.downgradeConfirmed&&(!plan.asset.pinned||!plan.signatureVerified))throw new IOException("回退来源或签名尚未核实");
         if(abis.isEmpty()||!ApkTransfer.compatible(plan.minimum,sdk,ApkTransfer.abis(Collections.singletonList(plan.file)),abis))throw new IOException("电视系统或 CPU 信息已变化，请重新检查。");
@@ -4292,7 +4240,7 @@ public class MainActivity extends Activity {
     DesktopDiagnostic.Verdict verdict=DesktopDiagnostic.classify(desktopSnapshot);TextView stateBadge=text(verdict.state,20,verdict.state.equals(DesktopDiagnostic.CRASH)?UiPalette.color(0xffff9292):TEAL);stateBadge.setTypeface(null,Typeface.BOLD);list.addView(stateBadge);list.addView(text(verdict.reason,13,MUTED));gap(list,10);
     TextView summary=text(DesktopAssistant.summary(desktopSnapshot),14,INK);summary.setTextIsSelectable(true);list.addView(summary);
     if(desktopManual!=null){gap(list,10);list.addView(text(desktopManual,13,TEAL));}
-    pair(list,"一键故障采集",()->captureDesktopFault(),"本机稳定版本",()->stableManager());
+    addButton(list,"故障报告",false,()->faultReport());
     addButton(list,"修复缺失授权 / 守护",true,()->reviewDesktopRepair());
     pair(list,"主页键人工验收",()->reviewHomeCheck(),"重新检查",()->checkDesktop());
     pair(list,"恢复本 App 的修改",()->reviewDesktopRestore(),"导出诊断报告",()->exportDesktopReport());
