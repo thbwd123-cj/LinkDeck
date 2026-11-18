@@ -10,7 +10,7 @@ public class DesktopSystemChecks extends RuntimeChecks {
   shell("cp "+apk.getAbsolutePath()+" /data/local/tmp/linkdeck_desktop_fixture09.apk");String installResult=shell("pm install -r /data/local/tmp/linkdeck_desktop_fixture09.apk");
   check(installResult.contains("Success"),"isolated desktop permission fixture installed: "+installResult.trim());installed=true;
   shell("pm grant app.orchard.tv android.permission.WRITE_SECURE_SETTINGS");shell("pm revoke app.orchard.tv android.permission.WRITE_SECURE_SETTINGS");
-  DesktopAssistant.Device d=c->shell(c);DesktopAssistant.Snapshot before=DesktopAssistant.inspect(d,"emulator-fixture");
+  DesktopAssistant.Device d=c->shell(c);DesktopAssistant.Snapshot before=DesktopAssistant.inspect(d,"emulator-fixture",DesktopAssistant.AERIAL);
   check(before.installed&&Boolean.parseBoolean(before.values.get(DesktopAssistant.PERMISSION))==false&&before.known.contains(DesktopAssistant.PERMISSION),"actual Android permission dump recognizes revoked state");
   DesktopBackupStore store=new DesktopBackupStore(new File(getTargetContext().getFilesDir(),"qa09-real-backup"));
   DesktopAssistant.Snapshot after=DesktopAssistant.repair(d,store,"emulator-fixture",before,Arrays.asList(DesktopAssistant.PERMISSION));

@@ -53,7 +53,7 @@ public class MainActivity extends Activity {
   private LanDiscovery discovery;
   private LinearLayout connectionPanel, connectionManager;
   private String installExpectedPackage;
-  private AlertDialog aerialCenterDialog, genericDialog;
+  private AlertDialog aerialCenterDialog, haloCenterDialog, genericDialog;
   private GenericPlan genericPlan;
   private volatile String activeTaskId;
   private final Set<String> ownedTaskIds = new HashSet<>();
@@ -228,9 +228,13 @@ public class MainActivity extends Activity {
     if (connectionDialog != null) connectionDialog.dismiss();
     if (commandResultDialog != null) commandResultDialog.dismiss();
     if (aerialDialog != null) aerialDialog.dismiss();
-    if (desktopDialog != null) desktopDialog.dismiss();
+    if (haloDialog != null) haloDialog.dismiss();
+    if (aerialDesktop.dialog != null) aerialDesktop.dialog.dismiss();
+    if (haloDesktop.dialog != null) haloDesktop.dialog.dismiss();
     if (aerialPlan != null) aerialPlan.file.delete();
+    if (haloPlan != null) haloPlan.file.delete();
     if(aerialCenterDialog!=null)aerialCenterDialog.dismiss();
+    if(haloCenterDialog!=null)haloCenterDialog.dismiss();
     if(genericDialog!=null)genericDialog.dismiss();
     if(genericPlan!=null)genericPlan.clean();
     if (isFinishing()) ConnectionService.disconnect(this);
@@ -1752,6 +1756,7 @@ public class MainActivity extends Activity {
     install.addView(text("仅核对已验证的官方来源；其他应用请手动选择 APK。安装前检查版本、签名与电视兼容性。",12,MUTED));
     addButton(install,"一键清理",false,()->cleanCache());
     aerialEntry(body);
+    haloEntry(body);
     LinearLayout c = card(body);
     LinearLayout heading = row();
     TextView title = text("电视上的应用", 18, INK);
@@ -2545,8 +2550,8 @@ public class MainActivity extends Activity {
       if(request==100)installExpectedPackage=null;
       if(request==108)new android.util.AtomicFile(compatibilityPending()).delete();
       if (request == 105) pendingCommandExport = null;
-      if (request == 106) new android.util.AtomicFile(desktopReportFile(true)).delete();
-      if (request == 107) new android.util.AtomicFile(faultReportFile(true)).delete();
+      if (request == 106) new android.util.AtomicFile(desktopReportFile(true,lastDesktopExportProfile==null?DesktopAssistant.AERIAL:lastDesktopExportProfile)).delete();
+      if (request == 107) new android.util.AtomicFile(faultReportFile(true,lastFaultExportProfile==null?DesktopAssistant.AERIAL:lastFaultExportProfile)).delete();
       return;
     }
     if(request==109){
@@ -2601,13 +2606,13 @@ public class MainActivity extends Activity {
       return;
     }
     if(request==108){final Uri destination=data.getData();run("导出兼容报告",()->{String frozen=readDesktopFile(compatibilityPending());try(OutputStream out=getContentResolver().openOutputStream(destination,"w")){if(out==null)throw new IOException("无法打开保存位置");out.write(frozen.getBytes("UTF-8"));}new android.util.AtomicFile(compatibilityPending()).delete();return "已保存脱敏兼容报告";},null);return;}
-    if(request==107){final Uri destination=data.getData();run("导出故障报告",()->{String payload=readDesktopFile(faultReportFile(true));try(OutputStream out=getContentResolver().openOutputStream(destination,"w")){if(out==null)throw new IOException("无法打开导出位置");out.write(payload.getBytes("UTF-8"));}new android.util.AtomicFile(faultReportFile(true)).delete();return "故障报告已导出";},null);return;}
+    if(request==107){final Uri destination=data.getData();run("导出故障报告",()->{String payload=readDesktopFile(faultReportFile(true,lastFaultExportProfile==null?DesktopAssistant.AERIAL:lastFaultExportProfile));try(OutputStream out=getContentResolver().openOutputStream(destination,"w")){if(out==null)throw new IOException("无法打开导出位置");out.write(payload.getBytes("UTF-8"));}new android.util.AtomicFile(faultReportFile(true,lastFaultExportProfile==null?DesktopAssistant.AERIAL:lastFaultExportProfile)).delete();return "故障报告已导出";},null);return;}
     if (request == 106) {
       final Uri target=data.getData();
       run("导出桌面诊断报告",()->{
-        String report=readDesktopFile(desktopReportFile(true));
+        String report=readDesktopFile(desktopReportFile(true,lastDesktopExportProfile==null?DesktopAssistant.AERIAL:lastDesktopExportProfile));
         try(OutputStream out=getContentResolver().openOutputStream(target,"w")){out.write(report.getBytes("UTF-8"));}
-        new android.util.AtomicFile(desktopReportFile(true)).delete();return "已导出桌面诊断报告";
+        new android.util.AtomicFile(desktopReportFile(true,lastDesktopExportProfile==null?DesktopAssistant.AERIAL:lastDesktopExportProfile)).delete();return "已导出桌面诊断报告";
       },null);return;
     }
     if (request == 105) {
@@ -3037,6 +3042,7 @@ public class MainActivity extends Activity {
     if(source==null){dialog("尚无已核实来源","目前没有足够证据把这个电视包名对应到一个官方直接下载渠道。可以使用“更新此应用”选择你确认的 APK；轻连仍会检查包名、签名和版本。");return;}
     if(app.system){dialog("系统应用不提供此入口","系统应用由电视固件管理，轻连不主动下载覆盖。");return;}
     if(source.type.equals(OfficialAppSources.AERIAL)){checkAerial("auto");return;}
+    if(source.type.equals(OfficialAppSources.HALO)){checkHalo("auto");return;}
     if(source.type.equals(OfficialAppSources.GITHUB)){checkGitHubApp(app.pkg,source.locator);return;}
     if(source.type.equals(OfficialAppSources.VIDEOLAN)){checkVideoLanApp(app.pkg);return;}
     if(source.type.equals(OfficialAppSources.KODI))checkKodiApp(app.pkg);
@@ -3077,6 +3083,10 @@ public class MainActivity extends Activity {
             published=release.tag;
           }else if(source.type.equals(OfficialAppSources.AERIAL)){
             GitHubAppRelease.Release release=GitHubAppRelease.latest("pengchujin/aerial-tv");
+            if(release.apks.isEmpty())throw new IOException("官方发布未提供 APK");
+            published=release.tag;
+          }else if(source.type.equals(OfficialAppSources.HALO)){
+            GitHubAppRelease.Release release=GitHubAppRelease.latest("Null9797/halo-tv");
             if(release.apks.isEmpty())throw new IOException("官方发布未提供 APK");
             published=release.tag;
           }else if(source.type.equals(OfficialAppSources.VIDEOLAN)){
@@ -3137,7 +3147,7 @@ public class MainActivity extends Activity {
       });
     }
     List<UpdateScanRow> candidates=new ArrayList<>();
-    for(UpdateScanRow row:rows)if(row.candidate&&!"app.orchard.tv".equals(row.pkg))candidates.add(row);
+    for(UpdateScanRow row:rows)if(row.candidate&&!"app.orchard.tv".equals(row.pkg)&&!"app.halotv.launcher".equals(row.pkg)&&!"app.halotv.launcher.lite".equals(row.pkg))candidates.add(row);
     if(!candidates.isEmpty())addButton(content,"选择批量更新 · "+candidates.size()+" 项",true,()->selectBatchUpdates(candidates));
     if(rows.isEmpty())content.addView(text("本次没有匹配到已核实来源的应用。",13,MUTED));
     if(!unmatched.isEmpty())addButton(content,"查看未匹配来源的 "+unmatched.size()+" 个应用",false,()->{
@@ -3992,52 +4002,58 @@ public class MainActivity extends Activity {
     if(DesktopAssistant.activeUser(d.shell("dumpsys accessibility"))!=0)throw new IOException("当前 Android 用户未确认或非用户 0，未准备安装");
     return DesktopAssistant.identity(endpoint,info.serial,info.fingerprint,info.model);
   }
-  private void historicalOptions(){
-    closeAerialCenter();
+  private void historicalOptions(DesktopAssistant.Profile profile){
+    if(profile==DesktopAssistant.AERIAL)closeAerialCenter();else closeHaloCenter();
     new DeckDialogBuilder(this).setTitle("官方历史版本与回退").setItems(new String[]{"浏览官方发布列表","输入官方发布标签（如 v1.73）"},(d,w)->{
-      if(w==0)chooseHistoryVariant(null);else{EditText tag=field("例如 v1.73","");new DeckDialogBuilder(this).setTitle("指定官方发布版本").setView(tag).setNegativeButton("取消",null).setPositiveButton("下一步",(a,b)->{try{chooseHistoryVariant(AerialDownload.releaseTag(tag.getText().toString()));}catch(Exception e){dialog("发布标签未识别",message(e));}}).show();}
+      if(w==0)chooseHistoryVariant(null,profile);else{EditText tag=field("例如 v1.73","");new DeckDialogBuilder(this).setTitle("指定官方发布版本").setView(tag).setNegativeButton("取消",null).setPositiveButton("下一步",(a,b)->{try{chooseHistoryVariant(profile==DesktopAssistant.AERIAL?AerialDownload.releaseTag(tag.getText().toString()):HaloDownload.releaseTag(tag.getText().toString()),profile);}catch(Exception e){dialog("发布标签未识别",message(e));}}).show();}
     }).setNegativeButton("关闭",null).show();
   }
-  private void chooseHistoryVariant(String tag){new DeckDialogBuilder(this).setTitle("选择安装类型").setItems(new String[]{"标准版 · Android 5.0+","守护版 · 无 HOME 声明","Lite · Android 4.0–4.4"},(d,i)->{String type=new String[]{"standard","guard","lite"}[i];if(tag==null)browseAerialReleases(type,1);else checkAerial(type,tag);}).setNegativeButton("取消",null).show();}
-  private void browseAerialReleases(String type,int page){
-    final List<AerialDownload.Asset>[] releases=new List[]{null};run("读取 Aerial 官方版本列表",()->{releases[0]=AerialDownload.releases(type,page,stage->taskProgress(stage));return "";},()->{
+  private void chooseHistoryVariant(String tag,DesktopAssistant.Profile profile){new DeckDialogBuilder(this).setTitle("选择安装类型").setItems(new String[]{"标准版 · Android 5.0+","守护版 · 无 HOME 声明","Lite · Android 4.0–4.4"},(d,i)->{String type=new String[]{"standard","guard","lite"}[i];if(tag==null)browseReleases(type,1,profile);else if(profile==DesktopAssistant.AERIAL)checkAerial(type,tag);else checkHalo(type,tag);}).setNegativeButton("取消",null).show();}
+  private void browseReleases(String type,int page,DesktopAssistant.Profile profile){
+    final List<String>[] tags=new List[]{null};run("读取 "+profile.displayName+" 官方版本列表",()->{
+      List<String> found=new ArrayList<>();
+      if(profile==DesktopAssistant.AERIAL)for(AerialDownload.Asset a:AerialDownload.releases(type,page,stage->taskProgress(stage)))found.add(a.tag);
+      else for(HaloDownload.Asset a:HaloDownload.releases(type,page,stage->taskProgress(stage)))found.add(a.tag);
+      tags[0]=found;return "";},()->{
       LinearLayout list=column();list.setPadding(dp(20),dp(4),dp(20),dp(4));list.addView(text("官方稳定发布 · 第 "+page+" 页\n旧版本仅表示可选，不代表已在本机验证。",14,INK));
-      AlertDialog[] modal={null};for(AerialDownload.Asset asset:releases[0])addButton(list,asset.tag+" · "+AerialSupport.title(type),false,()->{if(modal[0]!=null)modal[0].dismiss();checkAerial(type,asset.tag);});
-      if(releases[0].isEmpty())list.addView(text("本页未找到该类型的稳定发布，可输入官方标签查询。",14,MUTED));
-      if(page<10&&!releases[0].isEmpty())addButton(list,"下一页",false,()->{modal[0].dismiss();browseAerialReleases(type,page+1);});
+      AlertDialog[] modal={null};for(String tag:tags[0])addButton(list,tag+" · "+(profile==DesktopAssistant.AERIAL?AerialSupport.title(type):HaloSupport.title(type)),false,()->{if(modal[0]!=null)modal[0].dismiss();if(profile==DesktopAssistant.AERIAL)checkAerial(type,tag);else checkHalo(type,tag);});
+      if(tags[0].isEmpty())list.addView(text("本页未找到该类型的稳定发布，可输入官方标签查询。",14,MUTED));
+      if(page<10&&!tags[0].isEmpty())addButton(list,"下一页",false,()->{modal[0].dismiss();browseReleases(type,page+1,profile);});
       ScrollView scroll=new ScrollView(this);scroll.addView(list);modal[0]=new DeckDialogBuilder(this).setTitle("官方历史版本").setView(scroll).setNegativeButton("关闭",null).create();modal[0].show();
     });
   }
-  private File faultReportFile(boolean pending){return new File(getFilesDir(),pending?"fault_pending_export.txt":"fault_last_report.txt");}
+  private File faultReportFile(boolean pending,DesktopAssistant.Profile profile){return new File(getFilesDir(),pending?(profile==DesktopAssistant.HALO?"fault_pending_export_halo.txt":"fault_pending_export.txt"):(profile==DesktopAssistant.HALO?"fault_last_report_halo.txt":"fault_last_report.txt"));}
   private DesktopDiagnostic.Result lastFault;
-  private void captureDesktopFault(){
-    closeAerialCenter();
+  private DesktopAssistant.Profile lastFaultExportProfile, lastDesktopExportProfile;
+  private void captureDesktopFault(DesktopAssistant.Profile profile,DesktopState state){
+    if(profile==DesktopAssistant.AERIAL)closeAerialCenter();else closeHaloCenter();
     if(busy){toast("请等待当前任务完成");return;}if(!requestConnection())return;final AdbClient target=adb;final String endpoint=host+":"+prefs.getString("port","5555");final DesktopDiagnostic.Result[] result={null};
-    if(desktopDialog!=null)desktopDialog.dismiss();
+    if(state.dialog!=null)state.dialog.dismiss();
     run("一键故障采集",()->{
-      result[0]=DesktopDiagnostic.capture(c->{if(adb!=target)throw new IOException("连接已变化");taskProgress(c.startsWith("dumpsys dropbox")?"读取 Aerial 崩溃证据…":"只读采集电视状态，请保持电视画面…");return target.shell(c,8000).require();},endpoint);
-      writeDesktopFile(faultReportFile(false),DesktopDiagnostic.report(result[0]));return "";
-    },()->{lastFault=result[0];if(result[0].last()!=null){desktopSnapshot=result[0].last();desktopClient=target;desktopEndpoint=endpoint;desktopManual=null;desktopOutcome=null;}showFaultResult(result[0]);});
+      result[0]=DesktopDiagnostic.capture(c->{if(adb!=target)throw new IOException("连接已变化");taskProgress(c.startsWith("dumpsys dropbox")?"读取 "+profile.displayName+" 崩溃证据…":"只读采集电视状态，请保持电视画面…");return target.shell(c,8000).require();},endpoint,profile);
+      writeDesktopFile(faultReportFile(false,profile),DesktopDiagnostic.report(result[0]));return "";
+    },()->{lastFault=result[0];if(result[0].last()!=null){state.snapshot=result[0].last();state.client=target;state.endpoint=endpoint;state.manual=null;state.outcome=null;}showFaultResult(result[0],profile,state);});
   }
-  private void showFaultResult(DesktopDiagnostic.Result r){
+  private void showFaultResult(DesktopDiagnostic.Result r,DesktopAssistant.Profile profile,DesktopState state){
     DesktopDiagnostic.Verdict v=r.verdict();LinearLayout list=column();list.setPadding(dp(22),dp(8),dp(22),dp(10));int color=v.state.equals(DesktopDiagnostic.CRASH)?UiPalette.color(0xffff9292):v.state.equals(DesktopDiagnostic.NORMAL)?TEAL:UiPalette.color(0xffffcf80);
     TextView badge=text(v.state,22,color);badge.setTypeface(null,Typeface.BOLD);list.addView(badge);gap(list,8);list.addView(text(v.reason,14,INK));gap(list,10);
-    if(r.last()!=null)list.addView(text("电视："+r.last().model+"\nAerial："+r.last().version+"\n已完成 "+r.samples.size()+" / 3 次只读观察",14,MUTED));
-    if(v.state.equals(DesktopDiagnostic.CRASH))addButton(list,"选择官方版本或回退",true,()->historicalOptions());
-    else if(v.state.equals(DesktopDiagnostic.MISSING))addButton(list,"查看具体配置与修复项",true,()->showDesktopPanel());
-    else if(r.last()!=null)addButton(list,"查看已读到的详细状态",true,()->showDesktopPanel());
-    else addButton(list,"重新采集",true,()->captureDesktopFault());
-    addButton(list,"导出本次故障报告",false,()->exportFaultReport(DesktopDiagnostic.report(r)));addButton(list,"查看完整脱敏报告",false,()->dialog("故障报告",DesktopDiagnostic.report(r)));
+    if(r.last()!=null)list.addView(text("电视："+r.last().model+"\n"+profile.displayName+"："+r.last().version+"\n已完成 "+r.samples.size()+" / 3 次只读观察",14,MUTED));
+    if(v.state.equals(DesktopDiagnostic.CRASH))addButton(list,"选择官方版本或回退",true,()->historicalOptions(profile));
+    else if(v.state.equals(DesktopDiagnostic.MISSING))addButton(list,"查看具体配置与修复项",true,()->showDesktopPanel(profile,state));
+    else if(r.last()!=null)addButton(list,"查看已读到的详细状态",true,()->showDesktopPanel(profile,state));
+    else addButton(list,"重新采集",true,()->captureDesktopFault(profile,state));
+    addButton(list,"导出本次故障报告",false,()->exportFaultReport(DesktopDiagnostic.report(r),profile));addButton(list,"查看完整脱敏报告",false,()->dialog("故障报告",DesktopDiagnostic.report(r)));
     ScrollView scroll=new ScrollView(this);scroll.addView(list);new DeckDialogBuilder(this).setTitle("检查结果").setView(scroll).setNegativeButton("关闭",null).show();
   }
-  private void exportFaultReport(String report){run("准备故障报告导出",()->{writeDesktopFile(faultReportFile(true),report);return "";},()->createDocument(107,"text/plain","LinkDeck_Fault_"+System.currentTimeMillis()+".txt"));}
-  private void faultReport(){
-    closeAerialCenter();if(desktopDialog!=null)desktopDialog.dismiss();
-    if(!faultReportFile(false).exists()){
-      new DeckDialogBuilder(this).setTitle("故障报告").setMessage("暂无故障报告。").setNegativeButton("关闭",null).setPositiveButton("立即采集",(d,w)->captureDesktopFault()).show();return;
+  private void exportFaultReport(String report,DesktopAssistant.Profile profile){lastFaultExportProfile=profile;run("准备故障报告导出",()->{writeDesktopFile(faultReportFile(true,profile),report);return "";},()->createDocument(107,"text/plain","LinkDeck_Fault_"+System.currentTimeMillis()+".txt"));}
+  private void faultReport(DesktopAssistant.Profile profile,DesktopState state){
+    if(profile==DesktopAssistant.AERIAL)closeAerialCenter();else closeHaloCenter();if(state.dialog!=null)state.dialog.dismiss();
+    if(!faultReportFile(false,profile).exists()){
+      new DeckDialogBuilder(this).setTitle("故障报告").setMessage("暂无故障报告。").setNegativeButton("关闭",null).setPositiveButton("立即采集",(d,w)->captureDesktopFault(profile,state)).show();return;
     }
-    final String[] report={null};run("读取上次故障报告",()->{report[0]=readDesktopFile(faultReportFile(false));return "";},()->new DeckDialogBuilder(this).setTitle("故障报告").setMessage(report[0]).setNegativeButton("关闭",null).setNeutralButton("导出 TXT",(d,w)->exportFaultReport(report[0])).setPositiveButton("重新采集",(d,w)->captureDesktopFault()).show());
+    final String[] report={null};run("读取上次故障报告",()->{report[0]=readDesktopFile(faultReportFile(false,profile));return "";},()->new DeckDialogBuilder(this).setTitle("故障报告").setMessage(report[0]).setNegativeButton("关闭",null).setNeutralButton("导出 TXT",(d,w)->exportFaultReport(report[0],profile)).setPositiveButton("重新采集",(d,w)->captureDesktopFault(profile,state)).show());
   }
+  private void haloFaultReport(){faultReport(DesktopAssistant.HALO,haloDesktop);}
 
   private static final class AerialPlan {
     File file;AdbClient client;AerialDownload.Asset asset;AerialInstaller.Installed installed;
@@ -4050,9 +4066,9 @@ public class MainActivity extends Activity {
 
   private void aerialCard(LinearLayout parent) {
     LinearLayout c=card(parent),r=row();r.addView(new TvScene(this,true),new LinearLayout.LayoutParams(dp(57),dp(57)));
-    LinearLayout copy=column();copy.setPadding(dp(12),0,0,0);TextView title=text("Aerial TV",18,INK);title.setTypeface(null,Typeface.BOLD);copy.addView(title);gap(copy,5);String state="官方安装 · 桌面与版本管理";if(connected()&&desktopClient==adb&&desktopSnapshot!=null&&desktopSnapshot.installed)state="上次读取："+desktopSnapshot.version+" · 状态需复查";copy.addView(text(state,11,MUTED));r.addView(copy,new LinearLayout.LayoutParams(0,-2,1));c.addView(r);
+    LinearLayout copy=column();copy.setPadding(dp(12),0,0,0);TextView title=text("Aerial TV",18,INK);title.setTypeface(null,Typeface.BOLD);copy.addView(title);gap(copy,5);String state="官方安装 · 桌面与版本管理";if(connected()&&aerialDesktop.client==adb&&aerialDesktop.snapshot!=null&&aerialDesktop.snapshot.installed)state="上次读取："+aerialDesktop.snapshot.version+" · 状态需复查";copy.addView(text(state,11,MUTED));r.addView(copy,new LinearLayout.LayoutParams(0,-2,1));c.addView(r);
     pair(c,"检查更新",()->checkAerial("auto"),"桌面助手",()->checkDesktop());
-    pair(c,"版本管理",()->versionManager(),"故障报告",()->faultReport());
+    pair(c,"版本管理",()->versionManager(),"故障报告",()->faultReport(DesktopAssistant.AERIAL,aerialDesktop));
   }
 
   private void versionManager() {
@@ -4060,7 +4076,7 @@ public class MainActivity extends Activity {
     new DeckDialogBuilder(this).setTitle("版本管理")
       .setMessage("Android 5.0+：默认使用标准版。固件明确禁止安装桌面类应用时，可手动尝试守护版。\nAndroid 4.0–4.4：自动选择 Lite。\n\n只负责官方 APK 安装、更新和版本核验。不会停用原桌面，不会自动修改无障碍、屏保或默认桌面设置；已安装 Aerial 的既有设置由它自身保留。旧酷开固件的主页键和开机接管需另行验证。")
       .setNegativeButton("关闭",null)
-      .setPositiveButton("历史版本与回退",(d,w)->historicalOptions()).show();
+      .setPositiveButton("历史版本与回退",(d,w)->historicalOptions(DesktopAssistant.AERIAL)).show();
   }
 
   private ApkTransfer.Device aerialDevice(AdbClient client) {
@@ -4186,14 +4202,162 @@ public class MainActivity extends Activity {
     command("打开 Aerial","am start -n "+pkg+(pkg.equals(AerialSupport.LITE)?"/.HomeActivity":"/.MainActivity"),null);
   }
 
-  private DesktopAssistant.Snapshot desktopSnapshot;
-  private AdbClient desktopClient;
-  private String desktopEndpoint,desktopManual,desktopOutcome;
+  private void haloEntry(LinearLayout parent){LinearLayout c=card(parent);LinearLayout r=row();r.addView(text("Halo TV",15,INK),new LinearLayout.LayoutParams(0,-2,1));TextView open=button("桌面管理  ›",false,()->haloCenter());open.setTextSize(12);r.addView(open);c.addView(r);}
+  private void haloCenter(){LinearLayout panel=column();haloCard(panel);ScrollView scroll=new ScrollView(this);scroll.addView(panel);haloCenterDialog=new DeckDialogBuilder(this).setTitle("Halo TV 桌面管理").setView(scroll).setNegativeButton("关闭",null).create();haloCenterDialog.show();haloCenterDialog.getWindow().setLayout(Math.min(getResources().getDisplayMetrics().widthPixels-dp(20),dp(570)),(int)(getResources().getDisplayMetrics().heightPixels*.82));}
+  private void closeHaloCenter(){if(haloCenterDialog!=null){haloCenterDialog.dismiss();haloCenterDialog=null;}}
+
+  private static final class HaloPlan {
+    File file;AdbClient client;HaloDownload.Asset asset;HaloInstaller.Installed installed;
+    String variant,pkg,version,host,port,brand,abis,model,id,sha,signers,installedSigners;
+    String selectedTag;boolean transition,downgradeConfirmed,signatureVerified;
+    int sdk,minimum,decision;long code;boolean consumed,explicit;
+  }
+  private volatile HaloPlan haloPlan;
+  private AlertDialog haloDialog;
+
+  private void haloCard(LinearLayout parent) {
+    LinearLayout c=card(parent),r=row();r.addView(new TvScene(this,true),new LinearLayout.LayoutParams(dp(57),dp(57)));
+    LinearLayout copy=column();copy.setPadding(dp(12),0,0,0);TextView title=text("Halo TV",18,INK);title.setTypeface(null,Typeface.BOLD);copy.addView(title);gap(copy,5);String state="官方安装 · 桌面与版本管理";if(connected()&&haloDesktop.client==adb&&haloDesktop.snapshot!=null&&haloDesktop.snapshot.installed)state="上次读取："+haloDesktop.snapshot.version+" · 状态需复查";copy.addView(text(state,11,MUTED));r.addView(copy,new LinearLayout.LayoutParams(0,-2,1));c.addView(r);
+    pair(c,"检查更新",()->checkHalo("auto"),"桌面助手",()->checkHaloDesktop());
+    pair(c,"版本管理",()->haloVersionManager(),"故障报告",()->haloFaultReport());
+  }
+
+  private void haloVersionManager() {
+    closeHaloCenter();
+    new DeckDialogBuilder(this).setTitle("版本管理")
+      .setMessage("Android 5.0+：默认使用标准版。固件明确禁止安装桌面类应用时，可手动尝试守护版。\nAndroid 4.0–4.4：自动选择 Lite。\n\n只负责官方 APK 安装、更新和版本核验。不会停用原桌面，不会自动修改无障碍、屏保或默认桌面设置；已安装 Halo TV 的既有设置由它自身保留。守护版不声明 HOME，完全依赖桌面守护接管主页键；Lite 没有桌面守护。Halo TV 与 Aerial 可同时安装，但请勿同时启用两个桌面守护，可在桌面助手里随时切换。")
+      .setNegativeButton("关闭",null)
+      .setPositiveButton("历史版本与回退",(d,w)->historicalOptions(DesktopAssistant.HALO)).show();
+  }
+
+  private ApkTransfer.Device haloDevice(AdbClient client) {
+    return new ApkTransfer.Device() {
+      public String shell(String command)throws Exception{
+        if(command.equals("pm path "+HaloSupport.FULL)||command.equals("pm path "+HaloSupport.LITE))return HaloProbe.packagePath(c->client.shell(c),command.substring(8));
+        return HaloProbe.query(c->client.shell(c),command);
+      }
+      public void push(File file,String remote)throws Exception {
+        taskProgress("正在传输 Halo TV 到电视…");
+        try(InputStream in=new FileInputStream(file)){client.push(in,remote,n->transferProgress(n));}
+      }
+    };
+  }
+
+  private void checkHalo(String requested) {checkHalo(requested,null);}
+  private void checkHalo(String requested,String selectedTag) {
+    closeHaloCenter();
+    if(busy){toast("请等待当前任务完成");return;}
+    if(!requestConnection())return;
+    if(haloDialog!=null)haloDialog.dismiss();
+    if(haloPlan!=null&&!haloPlan.consumed)haloPlan.file.delete();
+    final HaloPlan plan=new HaloPlan();plan.client=adb;plan.host=host;plan.port=prefs.getString("port","5555");plan.explicit=!requested.equals("auto")||selectedTag!=null;plan.selectedTag=selectedTag;
+    plan.file=new File(getCacheDir(),"halo_"+UUID.randomUUID()+".apk");
+    run("检查 Halo TV 官方安装",()->{
+      try {
+        taskProgress("正在读取电视系统与 Halo TV 已装版本…");
+        ApkTransfer.Device target=haloDevice(plan.client);
+        AerialProbe.Properties info=AerialProbe.properties(c->plan.client.shell(c));plan.sdk=info.sdk;
+        plan.variant=requested.equals("auto")?HaloSupport.variant(plan.sdk):requested;
+        HaloSupport.validateVariant(plan.variant,plan.sdk);plan.pkg=HaloSupport.packageName(plan.variant);
+        plan.installed=HaloInstaller.read(target,plan.pkg);
+        // Preserve guard installations when the existing package explicitly has no HOME category.
+        plan.abis=info.abis;plan.brand=info.brand;plan.model=info.model;
+        if(plan.installed.present&&plan.installed.code<0)throw new IOException("检测到已装 Halo TV，但无法读取当前版本，已停止覆盖安装。\n"+plan.installed.dump);
+        plan.id=installationIdentity(target,info,plan.host+":"+plan.port);
+        if(plan.installed.present){InstalledProof existing=installedProof(plan.client,plan.pkg);if(existing.code!=plan.installed.code)throw new IOException("电视已装版本变化");plan.installedSigners=existing.signers;if(requested.equals("auto")&&plan.sdk>=21)plan.variant=existing.homeCategory?"standard":"guard";}
+        plan.asset=selectedTag==null?HaloDownload.download(plan.variant,plan.file,stage->taskProgress(stage)):HaloDownload.downloadPinned(selectedTag,plan.variant,plan.file,stage->taskProgress(stage));
+        validateHaloArchive(plan);
+        if(plan.installed.present){AerialSafety.sameSigners(plan.installedSigners,plan.signers);plan.signatureVerified=true;}
+        if(selectedTag!=null&&plan.pkg.equals(HaloSupport.FULL)&&!HaloDownload.versionFromTag(selectedTag).equals(plan.version))throw new IOException("包内版本与所选官方标签不一致，未改装其他版本");
+        plan.decision=HaloSupport.decision(plan.installed.present,plan.installed.code,plan.code);
+        if(isFinishing()||isDestroyed())throw new IOException("页面已关闭，已清理本次下载");
+        haloPlan=plan;
+        return haloReport(plan);
+      }catch(Exception e){plan.file.delete();throw e;}
+    },()->showHaloPlan(plan));
+  }
+
+  private void validateHaloArchive(HaloPlan plan)throws Exception {
+    PackageInfo pi=archiveInfo(plan.file);
+    if(pi==null||pi.applicationInfo==null||!plan.pkg.equals(pi.packageName))throw new IOException("下载包未通过 Halo TV 包名或签名信息检查，已停止安装。");
+    String splits=ApkManifest.splits(Collections.singletonList(plan.file));if(!splits.isEmpty())throw new IOException(splits);
+    plan.minimum=pi.applicationInfo.minSdkVersion;plan.version=pi.versionName;plan.code=packageVersion(pi);plan.signers=signerSet(pi);plan.sha=HaloDownload.sha256(plan.file);
+    Set<String> abis=ApkTransfer.abis(Collections.singletonList(plan.file));
+    if(!ApkTransfer.compatible(plan.minimum,plan.sdk,abis,plan.abis))throw new IOException(ApkManifest.compatibility(plan.minimum,plan.sdk,abis,plan.abis));
+  }
+
+  private String haloReport(HaloPlan p) {
+    String state=p.decision==-1?"可以安装":p.decision==1?"发现可用更新":p.decision==0?"已是同一版本":p.asset.pinned?"所选版本较旧：仅可手动尝试保留数据回退":"电视上版本更高，本次不会降级";
+    return "电视："+p.model+" · "+ApkManifest.android(p.sdk)+"\n架构："+p.abis+"\n选择："+HaloSupport.title(p.variant)+"\n已安装："+(p.installed.present?p.installed.name+"（"+p.installed.code+"）":"未安装")+"\n官方安装包："+p.version+"（"+p.code+"） · "+size(p.file.length())+"\n发布："+p.asset.tag+(p.asset.pinned?"（固定发布，不回退到最新版）":"")+"\n签名："+(p.installed.present?(p.signatureVerified?"与电视已安装证书一致":"尚未确认"):"首次安装，以官方来源和系统校验为准")+"\n\n"+state+"\n最低要求："+ApkManifest.android(p.minimum)+"\n"+(p.asset.digest.isEmpty()?"来自官方 HTTPS 地址；本次未取得官方文件摘要。":"已匹配官方发布的 SHA-256。")+"\n\n"+HaloSupport.limitations(p.sdk,p.brand)+"\n\n更新使用覆盖安装，保留应用数据；签名不一致时会停止，不会自动卸载旧版。";
+  }
+
+  private void showHaloPlan(HaloPlan plan) {
+    if(haloDialog!=null)haloDialog.dismiss();
+    LinearLayout panel=column();panel.setPadding(dp(18),0,dp(18),dp(4));
+    LinearLayout content=column(),brand=row();brand.addView(new TvScene(this,true),new LinearLayout.LayoutParams(dp(52),dp(52)));LinearLayout copy=column();copy.setPadding(dp(12),0,0,0);TextView title=text("Halo TV",18,INK);title.setTypeface(null,Typeface.BOLD);copy.addView(title);copy.addView(text("电视："+plan.model,11,MUTED));brand.addView(copy,new LinearLayout.LayoutParams(0,-2,1));content.addView(brand);gap(content,12);
+    sheetRow(content,"当前版本",plan.installed.present?plan.installed.name:"未安装",INK);
+    sheetRow(content,"目标版本",plan.version,INK);
+    sheetRow(content,"电视系统",ApkManifest.android(plan.sdk),INK);
+    sheetRow(content,"签名校验",plan.installed.present?(plan.signatureVerified?"与电视一致":"尚未确认"):"首次安装，由系统核验",plan.installed.present&&plan.signatureVerified?TEAL:UiPalette.color(0xffffcf80));
+    gap(content,10);TextView hint=text("安装要求符合不等于实际稳定。主页键、开机与持续运行仍需实测。",12,UiPalette.color(0xffffcf80));hint.setPadding(dp(12),dp(10),dp(12),dp(10));hint.setBackground(shape(UiPalette.color(0xff3d3326),12));gap(content,8);
+    TextView details=button("查看检查详情  ﹀",false,()->{});details.setTextSize(12);TextView report=text(haloReport(plan),13,MUTED);report.setTextIsSelectable(true);report.setPadding(0,dp(12),0,dp(8));report.setVisibility(View.GONE);details.setOnClickListener(v->{boolean expand=report.getVisibility()!=View.VISIBLE;report.setVisibility(expand?View.VISIBLE:View.GONE);details.setText(expand?"收起检查详情  ﹀":"查看检查详情  ›");});content.addView(details);content.addView(report);
+    ScrollView scroll=new ScrollView(this);scroll.setPadding(0,0,dp(7),0);scroll.addView(content);int reserved=dp(330+60*Math.max(0,getResources().getConfiguration().fontScale-1));panel.addView(scroll,new LinearLayout.LayoutParams(-1,Math.min(dp(330),Math.max(dp(110),getResources().getDisplayMetrics().heightPixels-reserved))));gap(panel,8);panel.addView(hint);
+    AlertDialog modal=new DeckDialogBuilder(this).setTitle("安装前确认").setView(panel).create();haloDialog=modal;
+    boolean install=plan.decision==-1||plan.decision==1||plan.decision==0&&plan.explicit||plan.decision==2&&plan.asset.pinned;
+    String action=plan.decision==-1?"安装到电视":plan.decision==1?"更新到电视":plan.decision==2?"评估保留数据回退":"覆盖为所选版本";
+    addButton(panel,install?action:"打开现有 Halo TV",true,()->{if(install)reviewHaloInstall(plan);else openHalo(plan.pkg);modal.dismiss();});
+    TextView cancel=button("取消",false,()->modal.dismiss());cancel.setBackgroundColor(Color.TRANSPARENT);panel.addView(cancel);
+    modal.setOnDismissListener(d->{if(!plan.consumed&&!plan.transition)plan.file.delete();if(haloDialog==modal)haloDialog=null;});modal.show();
+  }
+
+  private void reviewHaloInstall(HaloPlan plan){
+    boolean rollback=plan.decision==2;
+    if(!rollback){installHalo(plan);return;}plan.transition=true;
+    String text="将尝试 pm install -r -d，保留应用数据降级。签名必须一致，但电视可能拒绝；拒绝后停止，不会转为卸载或清除数据。旧版本能否读取新版数据仍未知，轻连无法完整备份 Halo TV 私有数据。\n\n确认后才会传输并请求安装；取消则清理本次下载。";
+    AlertDialog confirm=new DeckDialogBuilder(this).setTitle("确认本次保留数据回退").setMessage(text).setNegativeButton("取消",null)
+      .setPositiveButton("理解限制，尝试回退",(d,w)->{plan.downgradeConfirmed=rollback;installHalo(plan);}).create();haloDialog=confirm;
+    confirm.setOnDismissListener(d->{if(!plan.consumed)plan.file.delete();if(haloDialog==confirm)haloDialog=null;});confirm.show();
+  }
+  private void installHalo(HaloPlan plan) {
+    if(busy||!connected()||adb!=plan.client||!host.equals(plan.host)||!prefs.getString("port","5555").equals(plan.port)) {
+      dialog("请重新检查","设备连接或任务状态已变化，本次没有安装。请重新点击 Halo TV 检查按钮。");return;
+    }
+    plan.consumed=true;final String[] report={""};
+    run("安装或更新 Halo TV",()->{
+      try {
+        taskProgress("正在复查 Halo TV 安装包与电视版本…");
+        HaloDownload.verify(plan.file,plan.asset);validateHaloArchive(plan);
+        ApkTransfer.Device target=haloDevice(plan.client);
+        AerialProbe.Properties info=AerialProbe.properties(c->plan.client.shell(c));int sdk=info.sdk;String abis=info.abis;
+        HaloSupport.validateVariant(plan.variant,sdk);
+        String id=installationIdentity(target,info,plan.host+":"+plan.port);if(!id.equals(plan.id))throw new IOException("电视身份已变化，未安装");
+        if(plan.installed.present){InstalledProof current=installedProof(plan.client,plan.pkg);if(current.code!=plan.installed.code)throw new IOException("电视现有版本变化");AerialSafety.sameSigners(current.signers,plan.signers);}
+        if(plan.downgradeConfirmed&&(!plan.asset.pinned||!plan.signatureVerified))throw new IOException("回退来源或签名尚未核实");
+        if(abis.isEmpty()||!ApkTransfer.compatible(plan.minimum,sdk,ApkTransfer.abis(Collections.singletonList(plan.file)),abis))throw new IOException("电视系统或 CPU 信息已变化，请重新检查。");
+        report[0]=HaloInstaller.install(plan.file,plan.pkg,plan.code,plan.installed,new ApkTransfer.Device(){
+          public String shell(String command)throws Exception{if(command.startsWith("pm install"))taskProgress("正在安装 Halo TV，等待电视返回…");return target.shell(command);}
+          public void push(File file,String remote)throws Exception{target.push(file,remote);}
+        },plan.downgradeConfirmed);
+        appLoaded=false;return report[0];
+      }finally{plan.file.delete();}
+    },()->new DeckDialogBuilder(this).setTitle("Halo TV 安装包已确认").setMessage(report[0]+"\n\n可先打开 Halo TV；默认桌面和守护授权请按电视内的引导设置。旧酷开主页键限制仍需实际验证。")
+      .setNegativeButton("知道了",null).setPositiveButton("打开 Halo TV",(d,w)->openHalo(plan.pkg)).show());
+  }
+
+  private void openHalo(String pkg) {
+    if(!pkg.equals(HaloSupport.FULL)&&!pkg.equals(HaloSupport.LITE))return;
+    // Halo keeps Aerial's class namespace, so the component must be fully qualified.
+    command("打开 Halo TV","am start -n "+(pkg.equals(HaloSupport.LITE)?"app.halotv.launcher.lite/app.orchard.tv.lite.HomeActivity":"app.halotv.launcher/app.orchard.tv.MainActivity"),null);
+  }
+
+  private static final class DesktopState {
+    DesktopAssistant.Snapshot snapshot;AdbClient client;String endpoint,manual,outcome;AlertDialog dialog;
+  }
+  private final DesktopState aerialDesktop=new DesktopState(), haloDesktop=new DesktopState();
   private DesktopBackupStore desktopStore;
-  private AlertDialog desktopDialog;
   private interface DesktopWork {DesktopAssistant.Snapshot run(DesktopAssistant.Device device,String endpoint,DesktopAssistant.Snapshot reviewed)throws Exception;}
   private DesktopBackupStore desktopStore() {if(desktopStore==null)desktopStore=new DesktopBackupStore(new File(getFilesDir(),"desktop_backups"));return desktopStore;}
-  private File desktopReportFile(boolean pending) {return new File(getFilesDir(),pending?"desktop_pending_export.txt":"desktop_last_report.txt");}
+  private File desktopReportFile(boolean pending,DesktopAssistant.Profile profile) {return new File(getFilesDir(),pending?(profile==DesktopAssistant.HALO?"desktop_pending_export_halo.txt":"desktop_pending_export.txt"):(profile==DesktopAssistant.HALO?"desktop_last_report_halo.txt":"desktop_last_report.txt"));}
   private void writeDesktopFile(File file,String text)throws Exception {
     android.util.AtomicFile atomic=new android.util.AtomicFile(file);FileOutputStream out=atomic.startWrite();
     try{out.write(text.getBytes("UTF-8"));atomic.finishWrite(out);}catch(Exception e){atomic.failWrite(out);throw e;}
@@ -4202,126 +4366,166 @@ public class MainActivity extends Activity {
     if(!file.exists()&&!new File(file+".bak").exists())throw new IOException("还没有有效报告，请先执行对应检查或故障采集，再重新导出。");
     try(InputStream in=new android.util.AtomicFile(file).openRead();ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] b=new byte[8192];int n;while((n=in.read(b))!=-1){out.write(b,0,n);if(out.size()>1024*1024)throw new IOException("报告异常过大");}return out.toString("UTF-8");}
   }
-  private boolean desktopCurrent() {
-    if(!connected()||desktopSnapshot==null||desktopClient!=adb||!Objects.equals(desktopEndpoint,host+":"+prefs.getString("port","5555"))){dialog("请先重新检查","设备连接已变化，请重新点击“检查 Aerial 桌面”。");return false;}return true;
+  private boolean desktopCurrent(DesktopAssistant.Profile profile,DesktopState state) {
+    if(!connected()||state.snapshot==null||state.client!=adb||!Objects.equals(state.endpoint,host+":"+prefs.getString("port","5555"))){dialog("请先重新检查","设备连接已变化，请重新点击“检查 "+profile.displayName+" 桌面”。");return false;}return true;
   }
-  private void desktopAction(String name,boolean reviewed,DesktopWork work) {
+  private void desktopAction(String name,boolean reviewed,DesktopWork work,DesktopAssistant.Profile profile,DesktopState state) {
     if(busy){toast("请等待当前任务完成");return;}if(!requestConnection())return;
-    if(reviewed&&!desktopCurrent())return;
-    final AdbClient target=adb;final String endpoint=host+":"+prefs.getString("port","5555");final DesktopAssistant.Snapshot before=desktopSnapshot;
+    if(reviewed&&!desktopCurrent(profile,state))return;
+    final AdbClient target=adb;final String endpoint=host+":"+prefs.getString("port","5555");final DesktopAssistant.Snapshot before=state.snapshot;
     final DesktopAssistant.Snapshot[] result={null};
-    if(desktopDialog!=null)desktopDialog.dismiss();
+    if(state.dialog!=null)state.dialog.dismiss();
     run(name,()->{
       taskProgress(name+"，正在读取电视状态…");
       DesktopAssistant.Device device=command->{
         if(adb!=target)throw new IOException("连接设备已变化，已停止。");
-        String stage=command.startsWith("getprop")?"识别电视系统与身份…":command.contains("resolve-activity")?"检查默认桌面…":command.startsWith("dumpsys dropbox")?"核对当前版本崩溃记录…":command.equals("dumpsys accessibility")?"读取守护运行状态与当前用户…":command.startsWith("dumpsys window")?"读取电视当前前台…":command.startsWith("settings --user 0 get")?"读取桌面守护配置…":command.startsWith("settings --user 0 put")||command.startsWith("settings --user 0 delete")||command.startsWith("pm grant")||command.startsWith("pm revoke")||command.contains("set-home-activity")?"执行已确认的设置改动…":command.startsWith("am force-stop")?"暂停 Aerial…":"检查 Aerial 安装与授权…";
+        String stage=command.startsWith("getprop")?"识别电视系统与身份…":command.contains("resolve-activity")?"检查默认桌面…":command.startsWith("dumpsys dropbox")?"核对当前版本崩溃记录…":command.equals("dumpsys accessibility")?"读取守护运行状态与当前用户…":command.startsWith("dumpsys window")?"读取电视当前前台…":command.startsWith("settings --user 0 get")?"读取桌面守护配置…":command.startsWith("settings --user 0 put")||command.startsWith("settings --user 0 delete")||command.startsWith("pm grant")||command.startsWith("pm revoke")||command.contains("set-home-activity")?"执行已确认的设置改动…":command.startsWith("am force-stop")?"暂停 "+profile.displayName+"…":"检查 "+profile.displayName+" 安装与授权…";
         taskProgress(stage);return target.shell(command,8000).require();
       };
       try {result[0]=work.run(device,endpoint,before);}
       catch(DesktopAssistant.VerificationFailure failed){
         result[0]=failed.snapshot;
-        try{writeDesktopFile(desktopReportFile(false),DesktopAssistant.report(failed.snapshot,desktopManual));}catch(Exception saving){failed.addSuppressed(saving);}
-        ui.post(()->{if(isFinishing()||isDestroyed()||adb!=target)return;desktopSnapshot=failed.snapshot;desktopClient=target;desktopEndpoint=endpoint;desktopOutcome=failed.snapshot.outcome+"："+failed.getMessage();});
+        try{writeDesktopFile(desktopReportFile(false,profile),DesktopAssistant.report(failed.snapshot,state.manual));}catch(Exception saving){failed.addSuppressed(saving);}
+        ui.post(()->{if(isFinishing()||isDestroyed()||adb!=target)return;state.snapshot=failed.snapshot;state.client=target;state.endpoint=endpoint;state.outcome=failed.snapshot.outcome+"："+failed.getMessage();});
         throw failed;
       }
-      writeDesktopFile(desktopReportFile(false),DesktopAssistant.report(result[0],desktopManual));
+      writeDesktopFile(desktopReportFile(false,profile),DesktopAssistant.report(result[0],state.manual));
       return DesktopAssistant.summary(result[0]);
-    },()->{desktopSnapshot=result[0];desktopClient=target;desktopEndpoint=endpoint;if(result[0].outcome!=null)desktopOutcome=result[0].outcomeDetail;showDesktopPanel();});
+    },()->{state.snapshot=result[0];state.client=target;state.endpoint=endpoint;if(result[0].outcome!=null)state.outcome=result[0].outcomeDetail;showDesktopPanel(profile,state);});
   }
   private void checkDesktop() {
-    closeAerialCenter();desktopManual=null;desktopOutcome=null;desktopAction("检查 Aerial 桌面",false,(d,e,s)->DesktopAssistant.inspect(d,e));}
-  private void showDesktopPanel() {
-    if(desktopSnapshot==null)return;
-    if(desktopDialog!=null)desktopDialog.dismiss();
+    closeAerialCenter();aerialDesktop.manual=null;aerialDesktop.outcome=null;desktopAction("检查 Aerial 桌面",false,(d,e,s)->DesktopAssistant.inspect(d,e,DesktopAssistant.AERIAL),DesktopAssistant.AERIAL,aerialDesktop);}
+  private void checkHaloDesktop() {
+    closeHaloCenter();haloDesktop.manual=null;haloDesktop.outcome=null;desktopAction("检查 Halo TV 桌面",false,(d,e,s)->DesktopAssistant.inspect(d,e,DesktopAssistant.HALO),DesktopAssistant.HALO,haloDesktop);}
+  private void showDesktopPanel(DesktopAssistant.Profile profile,DesktopState state) {
+    if(state.snapshot==null)return;
+    if(state.dialog!=null)state.dialog.dismiss();
     LinearLayout content=column();content.setPadding(dp(20),dp(4),dp(20),dp(8));
     ScrollView scroll=new ScrollView(this);LinearLayout list=column();scroll.addView(list);content.addView(scroll,new LinearLayout.LayoutParams(-1,Math.min(dp(480),(int)(getResources().getDisplayMetrics().heightPixels*.65f))));
-    if(desktopOutcome!=null){list.addView(text(desktopOutcome,14,TEAL));gap(list,10);}
-    DesktopDiagnostic.Verdict verdict=DesktopDiagnostic.classify(desktopSnapshot);TextView stateBadge=text(verdict.state,20,verdict.state.equals(DesktopDiagnostic.CRASH)?UiPalette.color(0xffff9292):TEAL);stateBadge.setTypeface(null,Typeface.BOLD);list.addView(stateBadge);list.addView(text(verdict.reason,13,MUTED));gap(list,10);
-    TextView summary=text(DesktopAssistant.summary(desktopSnapshot),14,INK);summary.setTextIsSelectable(true);list.addView(summary);
-    if(desktopManual!=null){gap(list,10);list.addView(text(desktopManual,13,TEAL));}
-    addButton(list,"故障报告",false,()->faultReport());
-    addButton(list,"修复缺失授权 / 守护",true,()->reviewDesktopRepair());
-    pair(list,"主页键人工验收",()->reviewHomeCheck(),"重新检查",()->checkDesktop());
-    pair(list,"恢复本 App 的修改",()->reviewDesktopRestore(),"导出诊断报告",()->exportDesktopReport());
-    pair(list,"重新启动 Aerial",()->restartDesktop(),"电视桌面设置",()->{if(desktopCurrent())command("打开电视桌面设置","am start -a android.settings.HOME_SETTINGS",null);});
-    addButton(list,"打开电视无障碍设置",false,()->{if(desktopCurrent())command("打开电视无障碍设置","am start -a android.settings.ACCESSIBILITY_SETTINGS",null);});
-    desktopDialog=new DeckDialogBuilder(this).setTitle("Aerial 桌面助手").setView(content).setNegativeButton("关闭",null).create();desktopDialog.show();
+    if(state.outcome!=null){list.addView(text(state.outcome,14,TEAL));gap(list,10);}
+    DesktopDiagnostic.Verdict verdict=DesktopDiagnostic.classify(state.snapshot);TextView stateBadge=text(verdict.state,20,verdict.state.equals(DesktopDiagnostic.CRASH)?UiPalette.color(0xffff9292):TEAL);stateBadge.setTypeface(null,Typeface.BOLD);list.addView(stateBadge);list.addView(text(verdict.reason,13,MUTED));gap(list,10);
+    TextView summary=text(DesktopAssistant.summary(state.snapshot),14,INK);summary.setTextIsSelectable(true);list.addView(summary);
+    if(state.manual!=null){gap(list,10);list.addView(text(state.manual,13,TEAL));}
+    DesktopAssistant.Profile other=profile==DesktopAssistant.AERIAL?DesktopAssistant.HALO:DesktopAssistant.AERIAL;
+    DesktopState otherState=profile==DesktopAssistant.AERIAL?haloDesktop:aerialDesktop;
+    addButton(list,"切换到 "+other.displayName,false,()->switchDesktopAction(profile,state,other,otherState));
+    addButton(list,"故障报告",false,()->faultReport(profile,state));
+    addButton(list,"修复缺失授权 / 守护",true,()->reviewDesktopRepair(profile,state));
+    pair(list,"主页键人工验收",()->reviewHomeCheck(profile,state),"重新检查",()->{if(profile==DesktopAssistant.AERIAL)checkDesktop();else checkHaloDesktop();});
+    pair(list,"恢复本 App 的修改",()->reviewDesktopRestore(profile,state),"导出诊断报告",()->exportDesktopReport(profile,state));
+    pair(list,"重新启动 "+profile.displayName,()->restartDesktop(profile,state),"电视桌面设置",()->{if(desktopCurrent(profile,state))command("打开电视桌面设置","am start -a android.settings.HOME_SETTINGS",null);});
+    addButton(list,"打开电视无障碍设置",false,()->{if(desktopCurrent(profile,state))command("打开电视无障碍设置","am start -a android.settings.ACCESSIBILITY_SETTINGS",null);});
+    state.dialog=new DeckDialogBuilder(this).setTitle(profile.displayName+" 桌面助手").setView(content).setNegativeButton("关闭",null).create();state.dialog.show();
   }
-  private void reviewDesktopRepair() {
-    if(!desktopCurrent())return;final List<String> candidates=DesktopAssistant.candidates(desktopSnapshot);
+  private void switchDesktopAction(DesktopAssistant.Profile from,DesktopState fromState,DesktopAssistant.Profile to,DesktopState toState) {
+    if(!desktopCurrent(from,fromState))return;
+    DesktopAssistant.Snapshot target=toState.snapshot;
+    String targetNote=target==null?"尚未检查过 "+to.displayName+"，切换时会重新读取。":!target.installed&&!target.lite?"尚未安装 "+to.displayName+"，切换前请先安装。":target.installed?"已装 "+to.displayName+" "+target.version:"已装 "+to.displayName+" Lite";
+    new DeckDialogBuilder(this).setTitle("切换桌面到 "+to.displayName+"？")
+      .setMessage("切换会同时做两件事：停用 "+from.displayName+" 的桌面守护，启用 "+to.displayName+" 的守护并设为默认桌面。两个守护绝不会同时启用。\n\n"+targetNote+"\n\n每项改动都会先备份，可恢复。切换后仍需按实体主页键验收，并重启电视确认开机接管。")
+      .setNegativeButton("取消",null).setPositiveButton("切换",(d,w)->{
+        if(busy){toast("请等待当前任务完成");return;}if(!requestConnection())return;
+        final AdbClient client=adb;final String endpoint=host+":"+prefs.getString("port","5555");
+        final DesktopAssistant.Snapshot[] result={null};
+        if(fromState.dialog!=null)fromState.dialog.dismiss();
+        run("切换桌面到 "+to.displayName,()->{
+          taskProgress("正在读取两个桌面状态…");
+          DesktopAssistant.Device device=command->{
+            if(adb!=client)throw new IOException("连接设备已变化，已停止。");
+            taskProgress(command.contains("set-home-activity")?"正在切换默认桌面…":command.startsWith("settings --user 0 put")||command.startsWith("settings --user 0 delete")||command.startsWith("pm grant")||command.startsWith("pm revoke")?"正在切换桌面守护…":"正在读取电视状态…");
+            return client.shell(command,8000).require();
+          };
+          try {result[0]=DesktopAssistant.switchDesktop(device,desktopStore(),endpoint,fromState.snapshot,toState.snapshot);}
+          catch(DesktopAssistant.VerificationFailure failed){
+            result[0]=failed.snapshot;
+            try{writeDesktopFile(desktopReportFile(false,to),DesktopAssistant.report(failed.snapshot,fromState.manual));}catch(Exception saving){failed.addSuppressed(saving);}
+            ui.post(()->{if(isFinishing()||isDestroyed()||adb!=client)return;toState.snapshot=failed.snapshot;toState.client=client;toState.endpoint=endpoint;toState.outcome=failed.snapshot.outcome+"："+failed.getMessage();});
+            throw failed;
+          }
+          writeDesktopFile(desktopReportFile(false,to),DesktopAssistant.report(result[0],fromState.manual));
+          return DesktopAssistant.summary(result[0]);
+        },()->{
+          toState.snapshot=result[0];toState.client=client;toState.endpoint=endpoint;
+          if(result[0].outcome!=null)toState.outcome=result[0].outcomeDetail;
+          fromState.snapshot=null;fromState.client=null;fromState.endpoint=null;fromState.manual=null;fromState.outcome=null;
+          showDesktopPanel(to,toState);
+        });
+      }).show();
+  }
+  private void reviewDesktopRepair(DesktopAssistant.Profile profile,DesktopState state) {
+    if(!desktopCurrent(profile,state))return;final List<String> candidates=DesktopAssistant.candidates(state.snapshot);
     if(candidates.isEmpty()){dialog("没有可直接修复的缺失项","没有可安全写入的缺失配置，也可能当前用户不支持或状态未知。请查看守护运行及崩溃检查；配置完整仍未绑定，不代表修复完成。不要反复开启或重启，历史崩溃也不能单独证明当前仍有故障。");return;}
     String[] labels=new String[candidates.size()];boolean[] selected=new boolean[candidates.size()];
-    for(int i=0;i<labels.length;i++){labels[i]=DesktopAssistant.label(candidates.get(i));selected[i]=!candidates.get(i).equals(DesktopAssistant.DEFAULT);}
+    for(int i=0;i<labels.length;i++){labels[i]=DesktopAssistant.label(candidates.get(i),profile);selected[i]=!candidates.get(i).equals(DesktopAssistant.DEFAULT);}
     new DeckDialogBuilder(this).setTitle("选择要修复的项目")
       .setMultiChoiceItems(labels,selected,(d,index,on)->selected[index]=on)
       .setNegativeButton("取消",null).setPositiveButton("查看改动并备份",(d,w)->{
         List<String> chosen=new ArrayList<>();StringBuilder preview=new StringBuilder();
         for(int i=0;i<selected.length;i++)if(selected[i]){chosen.add(candidates.get(i));preview.append("• ").append(labels[i]).append("\n");}
         if(chosen.isEmpty()){toast("未选择修复项目");return;}
-        preview.append("\n每项修改前先保存原值；只补充 Aerial 所需项目，保留其他服务。启用守护会打开无障碍总开关，列表内原有服务也可能随之运行。默认桌面仅在已读到原桌面且系统支持时修改，小米和旧系统跳过。修改后会核验所选配置；选择守护时还会限次检查绑定并比较新增崩溃。未生效、未绑定或出现新崩溃时停止并保留备份，不会重复写入。不能据此承诺开机接管。");
+        preview.append("\n每项修改前先保存原值；只补充 "+profile.displayName+" 所需项目，保留其他服务。启用守护会打开无障碍总开关，列表内原有服务也可能随之运行。默认桌面仅在已读到原桌面且系统支持时修改，小米和旧系统跳过。修改后会核验所选配置；选择守护时还会限次检查绑定并比较新增崩溃。未生效、未绑定或出现新崩溃时停止并保留备份，不会重复写入。不能据此承诺开机接管。");
         new DeckDialogBuilder(this).setTitle("确认本次具体改动").setMessage(preview.toString()).setNegativeButton("取消",null).setPositiveButton("备份并执行",(a,b)->{
-          desktopManual=null;desktopOutcome=null;
-          desktopAction("修复 Aerial 桌面",true,(device,endpoint,state)->DesktopAssistant.repair(device,desktopStore(),endpoint,state,chosen));
+          state.manual=null;state.outcome=null;
+          desktopAction("修复 "+profile.displayName+" 桌面",true,(device,endpoint,st)->DesktopAssistant.repair(device,desktopStore(),endpoint,st,chosen),profile,state);
         }).show();
       }).show();
   }
-  private void reviewDesktopRestore() {
-    if(!desktopCurrent())return;
-    final JSONObject[] backup={null};final String id=desktopSnapshot.id;
+  private void reviewDesktopRestore(DesktopAssistant.Profile profile,DesktopState state) {
+    if(!desktopCurrent(profile,state))return;
+    final JSONObject[] backup={null};final String id=state.snapshot.id;
     run("读取桌面备份",()->{backup[0]=desktopStore().load(id);return "";},()->{
       if(!DesktopAssistant.hasBackup(backup[0])){dialog("暂无可恢复的修改","当前设备没有本 App 记录的未恢复变更。备份与设备身份绑定；更换地址或固件后可能需要重新核对。");return;}
       if(DesktopAssistant.hasUncertain(backup[0])){
         StringBuilder uncertain=new StringBuilder("以下项目的写入结果未确认，不能认定来自轻连，本次不会自动回滚：\n");
-        JSONArray entries=backup[0].optJSONArray("changes");for(int i=0;i<entries.length();i++){JSONObject e=entries.optJSONObject(i);if(e!=null&&!Arrays.asList("applied","prepared","restored","preserved","skipped").contains(e.optString("state")))uncertain.append("• ").append(DesktopAssistant.label(e.optString("key"))).append("\n");}
+        JSONArray entries=backup[0].optJSONArray("changes");for(int i=0;i<entries.length();i++){JSONObject e=entries.optJSONObject(i);if(e!=null&&!Arrays.asList("applied","prepared","restored","preserved","skipped").contains(e.optString("state")))uncertain.append("• ").append(DesktopAssistant.label(e.optString("key"),profile)).append("\n");}
         uncertain.append("\n保留当前设置：只归档这些未确认记录，不向电视写设置。其他已确认修改仍保留备份，可之后单独恢复。取消会完整保留备份。");
         new DeckDialogBuilder(this).setTitle("先处理未确认备份").setMessage(uncertain.toString()).setNegativeButton("取消",null)
-          .setPositiveButton("保留当前设置",(d,w)->{desktopOutcome=null;desktopAction("归档未确认桌面备份",true,(device,endpoint,state)->DesktopAssistant.preserveUncertain(device,desktopStore(),endpoint,state));}).show();return;
+          .setPositiveButton("保留当前设置",(d,w)->{state.outcome=null;desktopAction("归档未确认桌面备份",true,(device,endpoint,st)->DesktopAssistant.preserveUncertain(device,desktopStore(),endpoint,st),profile,state);}).show();return;
       }
       StringBuilder details=new StringBuilder();JSONArray changes=backup[0].optJSONArray("changes");
-      for(int i=0;i<changes.length();i++){JSONObject entry=changes.optJSONObject(i);if(entry==null||Arrays.asList("restored","preserved","skipped","prepared").contains(entry.optString("state")))continue;details.append("• ").append(DesktopAssistant.restoreLabel(entry.optString("key"))).append(entry.optString("state").equals("pending")?"（上次结果未知）":"").append("\n");if(entry.optString("key").equals(DesktopAssistant.DEFAULT))details.append("  原桌面：").append(entry.optString("before")).append("\n");}
-      details.append("\n只撤回本 App 记录的改动，保留其他服务以及之后手动选择的桌面。恢复期间会暂停 Aerial；之后再次打开它，可能由 Aerial 自身重新启用守护。未能确认恢复时会保留备份以便继续。");
+      for(int i=0;i<changes.length();i++){JSONObject entry=changes.optJSONObject(i);if(entry==null||Arrays.asList("restored","preserved","skipped","prepared").contains(entry.optString("state")))continue;details.append("• ").append(DesktopAssistant.restoreLabel(entry.optString("key"),profile)).append(entry.optString("state").equals("pending")?"（上次结果未知）":"").append("\n");if(entry.optString("key").equals(DesktopAssistant.DEFAULT))details.append("  原桌面：").append(entry.optString("before")).append("\n");}
+      details.append("\n只撤回本 App 记录的改动，保留其他服务以及之后手动选择的桌面。恢复期间会暂停 "+profile.displayName+"；之后再次打开它，可能由 "+profile.displayName+" 自身重新启用守护。未能确认恢复时会保留备份以便继续。");
       new DeckDialogBuilder(this).setTitle("恢复修改预览").setMessage(details.toString()).setNegativeButton("取消",null).setPositiveButton("恢复并复查",(d,w)->{
-        desktopManual=null;desktopOutcome="已撤回本 App 可恢复的改动，保留外部变更；Aerial 已暂停。";
-        desktopAction("恢复 Aerial 桌面修改",true,(device,endpoint,state)->DesktopAssistant.restore(device,desktopStore(),endpoint,state));
+        state.manual=null;state.outcome="已撤回本 App 可恢复的改动，保留外部变更；"+profile.displayName+" 已暂停。";
+        desktopAction("恢复 "+profile.displayName+" 桌面修改",true,(device,endpoint,st)->DesktopAssistant.restore(device,desktopStore(),endpoint,st),profile,state);
       }).show();
     });
   }
-  private void reviewHomeCheck() {
-    if(!desktopCurrent())return;
+  private void reviewHomeCheck(DesktopAssistant.Profile profile,DesktopState state) {
+    if(!desktopCurrent(profile,state))return;
     new DeckDialogBuilder(this).setTitle("请使用电视实体遥控器")
       .setMessage("请按电视遥控器的主页键，等待约 10 秒，再点击下面的“已按主页，读取”。本步骤不模拟按键，不修改默认桌面，也不会重启电视。")
-      .setNegativeButton("取消",null).setPositiveButton("已按主页，读取",(d,w)->desktopAction("Aerial 主页键人工验收",true,(device,endpoint,state)->{
-        DesktopAssistant.Snapshot now=DesktopAssistant.inspect(device,endpoint);
-        if(!state.id.equals(now.id))throw new IOException("设备身份已变化，未作主页键判断。");
-        boolean aerial=now.focus!=null&&(now.focus.startsWith(DesktopAssistant.PKG+"/")||now.focus.startsWith("app.orchard.tv.lite/"));
-        desktopManual=new SimpleDateFormat("MM-dd HH:mm:ss",Locale.CHINA).format(new Date())+" · "+(now.focus==null?"未确认：未读取到前台窗口。":aerial?"本次主页操作后看到 Aerial 前台，当前验收通过。":"本次未看到 Aerial 前台："+now.focus)+"\n依赖你已按实体主页键；不代表开机接管已通过。";
-        desktopOutcome="主页键结果已记录，本步骤没有更改电视设置。";return now;
-      })).show();
+      .setNegativeButton("取消",null).setPositiveButton("已按主页，读取",(d,w)->desktopAction(profile.displayName+" 主页键人工验收",true,(device,endpoint,st)->{
+        DesktopAssistant.Snapshot now=DesktopAssistant.inspect(device,endpoint,profile);
+        if(!st.id.equals(now.id))throw new IOException("设备身份已变化，未作主页键判断。");
+        boolean current=now.focus!=null&&(now.focus.startsWith(profile.pkg+"/")||now.focus.startsWith(profile.litePkg+"/"));
+        state.manual=new SimpleDateFormat("MM-dd HH:mm:ss",Locale.CHINA).format(new Date())+" · "+(now.focus==null?"未确认：未读取到前台窗口。":current?"本次主页操作后看到 "+profile.displayName+" 前台，当前验收通过。":"本次未看到 "+profile.displayName+" 前台："+now.focus)+"\n依赖你已按实体主页键；不代表开机接管已通过。";
+        state.outcome="主页键结果已记录，本步骤没有更改电视设置。";return now;
+      },profile,state)).show();
   }
-  private void restartDesktop() {
-    if(!desktopCurrent())return;
-    new DeckDialogBuilder(this).setTitle("重新启动 Aerial？").setMessage("只暂停并重新打开 Aerial，会中断它当前的界面。不会重启电视、清除数据或停用原桌面。启动后限次核验绑定并比较新崩溃。未绑定或发现新增崩溃时返回未完成结果，不会反复重启。")
+  private void restartDesktop(DesktopAssistant.Profile profile,DesktopState state) {
+    if(!desktopCurrent(profile,state))return;
+    new DeckDialogBuilder(this).setTitle("重新启动 "+profile.displayName+"？").setMessage("只暂停并重新打开 "+profile.displayName+"，会中断它当前的界面。不会重启电视、清除数据或停用原桌面。启动后限次核验绑定并比较新崩溃。未绑定或发现新增崩溃时返回未完成结果，不会反复重启。")
       .setNegativeButton("取消",null).setPositiveButton("重新启动",(d,w)->{
-        desktopManual=null;desktopOutcome=null;
-        desktopAction("重新启动 Aerial 桌面",true,(device,endpoint,state)->{
-          DesktopAssistant.Snapshot now=DesktopAssistant.inspect(device,endpoint);
-          if(!state.id.equals(now.id)||!now.installed||now.code!=state.code||now.userId!=0)throw new IOException("Aerial 安装、设备或当前用户状态变化，请重新检查。");
-          device.shell("am force-stop app.orchard.tv");
+        state.manual=null;state.outcome=null;
+        desktopAction("重新启动 "+profile.displayName+" 桌面",true,(device,endpoint,st)->{
+          DesktopAssistant.Snapshot now=DesktopAssistant.inspect(device,endpoint,profile);
+          if(!st.id.equals(now.id)||!now.installed||now.code!=st.code||now.userId!=0)throw new IOException(profile.displayName+" 安装、设备或当前用户状态变化，请重新检查。");
+          device.shell("am force-stop "+profile.pkg);
           Thread.sleep(3000);
-          String out=device.shell("am start -n app.orchard.tv/.MainActivity");
-          if(!out.contains("Starting: Intent")||out.contains("Error:")||out.contains("Exception"))throw new IOException("Aerial 启动请求未确认：\n"+out);
+          String out=device.shell("am start -n "+profile.home);
+          if(!out.contains("Starting: Intent")||out.contains("Error:")||out.contains("Exception"))throw new IOException(profile.displayName+" 启动请求未确认：\n"+out);
           return DesktopAssistant.verifyLaunch(device,endpoint,now);
-        });
+        },profile,state);
       }).show();
   }
-  private void exportDesktopReport() {
-    run("准备桌面报告导出",()->{String report=readDesktopFile(desktopReportFile(false));writeDesktopFile(desktopReportFile(true),report);return "";},()->createDocument(106,"text/plain","LinkDeck_Aerial_Diagnostic_"+System.currentTimeMillis()+".txt"));
+  private void exportDesktopReport(DesktopAssistant.Profile profile,DesktopState state) {
+    run("准备桌面报告导出",()->{lastDesktopExportProfile=profile;String report=readDesktopFile(desktopReportFile(false,profile));writeDesktopFile(desktopReportFile(true,profile),report);return "";},()->createDocument(106,"text/plain","LinkDeck_"+profile.displayName.replace(" ","")+"_Diagnostic_"+System.currentTimeMillis()+".txt"));
   }
-  private void lastDesktopReport() {
-    final String[] report={null};run("读取上次桌面报告",()->{report[0]=readDesktopFile(desktopReportFile(false));return "";},()->{
+  private void lastDesktopReport(DesktopAssistant.Profile profile) {
+    final String[] report={null};run("读取上次桌面报告",()->{report[0]=readDesktopFile(desktopReportFile(false,profile));return "";},()->{
       TextView text=text(report[0],14,INK);text.setTextIsSelectable(true);text.setPadding(dp(24),dp(8),dp(24),dp(8));ScrollView scroll=new ScrollView(this);scroll.addView(text);
-      new DeckDialogBuilder(this).setTitle("上次桌面报告（历史记录）").setView(scroll).setNegativeButton("关闭",null).setPositiveButton("导出 TXT",(d,w)->exportDesktopReport()).show();
+      new DeckDialogBuilder(this).setTitle("上次桌面报告（历史记录）").setView(scroll).setNegativeButton("关闭",null).setPositiveButton("导出 TXT",(d,w)->exportDesktopReport(profile,profile==DesktopAssistant.AERIAL?aerialDesktop:haloDesktop)).show();
     });
   }
 

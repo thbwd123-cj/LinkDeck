@@ -16,7 +16,7 @@ public class Version010SystemChecks extends DesktopSystemChecks {
   File official=asset("aerial-standard.apk");Object officialInfo=archive.invoke(activity,official);String officialCert=(String)sign.invoke(activity,officialInfo);boolean rejected=false;try{AerialSafety.sameSigners(cert,officialCert);}catch(IOException expected){rejected=true;}check(rejected,"actual upstream certificate is rejected against unrelated fixture signer");
   shell("mkdir -p /sdcard/Android/data/app.orchard.tv/files; echo KEEP_010 > /sdcard/Android/data/app.orchard.tv/files/qa010-marker");
   ApkTransfer.Device d=new ApkTransfer.Device(){public String shell(String c)throws Exception{return adb.shell(c).require();}public void push(File f,String remote)throws Exception{try(InputStream in=new FileInputStream(f)){adb.push(in,remote,null);}}};
-  DesktopAssistant.Snapshot snapshot=DesktopAssistant.inspect(c->adb.shell(c).require(),"127.0.0.1:5555");
+  DesktopAssistant.Snapshot snapshot=DesktopAssistant.inspect(c->adb.shell(c).require(),"127.0.0.1:5555",DesktopAssistant.AERIAL);
   getTargetContext().getSharedPreferences("linkdeck",0).edit().putString("port","5555").commit();set("adb",adb);set("host","127.0.0.1");
   AerialInstaller.Installed before=AerialInstaller.read(d,AerialSupport.FULL);AerialInstaller.install(newer,AerialSupport.FULL,901,before,d);check(AerialInstaller.read(d,AerialSupport.FULL).code==901,"actual preserving update reads back version 901");
   boolean implicit=false;try{AerialInstaller.install(old,AerialSupport.FULL,900,AerialInstaller.read(d,AerialSupport.FULL),d);}catch(IOException expected){implicit=true;}check(implicit&&AerialInstaller.read(d,AerialSupport.FULL).code==901,"implicit downgrade remains blocked before transfer");

@@ -34,6 +34,20 @@ public class RuntimeChecks extends Instrumentation {
     f.set(activity, value);
   }
 
+  Object stateField(String holder, String name) throws Exception {
+    Object state = field(holder);
+    Field f = state.getClass().getDeclaredField(name);
+    f.setAccessible(true);
+    return f.get(state);
+  }
+
+  void setState(String holder, String name, Object value) throws Exception {
+    Object state = field(holder);
+    Field f = state.getClass().getDeclaredField(name);
+    f.setAccessible(true);
+    f.set(state, value);
+  }
+
   void call(String name, Class<?>[] types, Object... args) throws Exception {
     Method m = activity.getClass().getDeclaredMethod(name, types);
     m.setAccessible(true);
