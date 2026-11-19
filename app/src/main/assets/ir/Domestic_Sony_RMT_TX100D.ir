@@ -1,0 +1,97 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://raw.githubusercontent.com/flipperdevices/IRDB/dev/database/categories/TVs/Sony/Sony_RMT_TX100D/Sony_RMT_TX100D.ir
+# License: MIT (flipperdevices/IRDB) — see licenses/Flipper-Official-IRDB-MIT.txt
+# Bundled for LinkDeck 0.19.17: Sony remotes use SIRC, which IrCodes.fromFlipper() rejects,
+# so every key below is the SIRC frame converted to type: raw (see conversion note).
+# Conversion (SIRC spec: sbprojects.net/knowledge/ir/sirc.php, confirmed against Flipper
+# firmware lib/infrared/encoder_decoder/sirc/infrared_protocol_sirc.h): 40 kHz carrier;
+# start burst 2400 mark + 600 space; bit 1 = 1200 mark + 600 space, bit 0 = 600 mark + 600 space;
+# 12-bit SIRC = 7 command bits LSB-first then 5 address bits LSB-first (26 timings);
+# 15-bit SIRC15 = 7 command bits LSB-first then 8 address bits LSB-first (32 timings).
+# Single frame per key (the app's NEC/Samsung32 keys are also single frames); Sony remotes
+# repeat the frame every 45 ms while held — if single frames prove unreliable on a real TV,
+# repeat the frame 3x with the gap padded to 45 ms per frame.
+# MENU is borrowed: Options, SIRC15 addr 0x97 cmd 0x36, from Sony_Bravia_KDL46W905A.ir and
+# Sony_RM_ED016.ir (both agree; same Bravia era as RMT-TX100D). BACK is Back, SIRC15 0x97/0x23
+# (TX100D + RM_ED016 + Lucaslhm SonyTV.ir agree); Exit, SIRC 0x01/0x63, is a separate key.
+# Keys verified against IrCodes.fromFlipper rules (raw: 20-60 kHz, 3-1200 pulses, <=64KB).
+# NOT yet verified on a physical TV — treat as candidate until a user confirms it on their set.
+#
+name: POWER
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x15 (12-bit)
+data: 2400 600 1200 600 600 600 1200 600 600 600 1200 600 600 600 600 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: UP
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x74 (12-bit)
+data: 2400 600 600 600 600 600 1200 600 600 600 1200 600 1200 600 1200 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: DOWN
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x75 (12-bit)
+data: 2400 600 1200 600 600 600 1200 600 600 600 1200 600 1200 600 1200 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: LEFT
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x34 (12-bit)
+data: 2400 600 600 600 600 600 1200 600 600 600 1200 600 1200 600 600 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: RIGHT
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x33 (12-bit)
+data: 2400 600 1200 600 1200 600 600 600 600 600 1200 600 1200 600 600 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: OK
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x65 (12-bit)
+data: 2400 600 1200 600 600 600 1200 600 600 600 600 600 1200 600 1200 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: BACK
+type: raw
+frequency: 40000
+# SIRC source: SIRC15 address 0x97 command 0x23 (15-bit)
+data: 2400 600 1200 600 1200 600 600 600 600 600 600 600 1200 600 600 600 1200 600 1200 600 1200 600 600 600 1200 600 600 600 600 600 1200 600
+#
+name: HOME
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x60 (12-bit)
+data: 2400 600 600 600 600 600 600 600 600 600 600 600 1200 600 1200 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: MENU
+type: raw
+frequency: 40000
+# SIRC source: SIRC15 address 0x97 command 0x36 (15-bit)
+data: 2400 600 600 600 1200 600 1200 600 600 600 1200 600 1200 600 600 600 1200 600 1200 600 1200 600 600 600 1200 600 600 600 600 600 1200 600
+#
+name: MUTE
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x14 (12-bit)
+data: 2400 600 600 600 600 600 1200 600 600 600 1200 600 600 600 600 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: VOL_UP
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x12 (12-bit)
+data: 2400 600 600 600 1200 600 600 600 600 600 1200 600 600 600 600 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: VOL_DOWN
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x13 (12-bit)
+data: 2400 600 1200 600 1200 600 600 600 600 600 1200 600 600 600 600 600 1200 600 600 600 600 600 600 600 600 600
+#
+name: SOURCE
+type: raw
+frequency: 40000
+# SIRC source: SIRC address 0x01 command 0x25 (12-bit)
+data: 2400 600 1200 600 600 600 1200 600 600 600 600 600 1200 600 600 600 1200 600 600 600 600 600 600 600 600 600

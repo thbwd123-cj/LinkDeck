@@ -921,7 +921,7 @@ public class MainActivity extends Activity {
     }).setNegativeButton("取消",null).setNeutralButton("支持范围",(d,w)->supportScope()).show();
   }
   private void brandGuide(){
-    String[] brands={"小米 / Redmi","海信 / VIDAA / Vidda","TCL / 雷鸟","创维 / 酷开","长虹","康佳","海尔 / 卡萨帝 / 统帅","华为智慧屏","荣耀智慧屏","乐视","联想","暴风","微鲸","PPTV"};
+    String[] brands={"小米 / Redmi","海信 / VIDAA / Vidda","TCL / 雷鸟","创维 / 酷开","长虹","康佳","海尔 / 卡萨帝 / 统帅","华为智慧屏","荣耀智慧屏","乐视","联想","暴风","微鲸","PPTV","索尼","三星"};
     new DeckDialogBuilder(this).setTitle("电视调试设置图示").setItems(brands,(d,w)->{
       String[][] steps={
         {"设置 → 关于 → 连按「产品型号」进开发者模式","设置 → 账号与安全 → 打开「ADB 调试」","同时打开「安装未知来源的应用」（如需装应用）","设置 → 网络，记下电视 IP"},
@@ -937,9 +937,11 @@ public class MainActivity extends Activity {
         {"不用在电视上开：ADB 5555 出厂就开着","电脑直接 adb connect 电视 IP:5555","注意：连得上，但改不了系统包","较新机型：无可靠专属路径"},
         {"电视切到 HDMI1","快速按「菜单、左、右、上、下、确认」","工厂模式里打开 adbd 开关","只改 adbd 这一项"},
         {"设置 → 安全 → 打开「ADB 调试」","设置 → 网络，记下电视 IP","电脑 adb connect 电视 IP:5555","电视上弹授权框时选「允许」"},
+        null,
+        {"设置 → 系统 → 关于","连按「Android TV OS build」7 次，直到提示已是开发者","返回 → 系统 → 开发者选项","打开「USB 调试」（老机型：设置 → 设备偏好设置 → 关于 → 连按「Build」7 次 → 开发者选项 → USB 调试）"},
         null
       };
-      String[] noGuide={null,null,null,null,null,null,null,null,"本品牌目前无法开启 ADB。",null,null,null,null,"未找到本品牌专属的 ADB 开启方法。"};
+      String[] noGuide={null,null,null,null,null,null,null,null,"本品牌目前无法开启 ADB。",null,null,null,null,"未找到本品牌专属的 ADB 开启方法。",null,"三星电视是 Tizen 系统，没有 ADB，只能用红外遥控（本应用支持纯红外模式）；如需装应用或管理文件，请连接外接的 Android 电视盒子。"};
       String[] notes={
         "小米待机后可能自动关闭 ADB；部分固件每次重启会把 ADB 开关复位，需重新开启。",
         "纯 VIDAA 系统（非安卓）没有 ADB；带数字键的老遥控器可在声音平衡处直接输 1969。",
@@ -954,7 +956,9 @@ public class MainActivity extends Activity {
         "较新机型无可靠专属路径；ideatv 连上之后系统包动不了，只有自己装的第三方包能卸。",
         "来源均为 2019–2020 年老帖，其他型号未经核实；暴风已停运，均为存量旧机型。",
         "路径只有一个直接来源；品牌已注销，均为存量旧机型。",
-        "未找到 PPTV 专属的 ADB 开启方法；可先试通用安卓路径（设置 → 关于 → 连点版本号 7 次 → 开发者选项 → USB 调试），但未经核实。"};
+        "未找到 PPTV 专属的 ADB 开启方法；可先试通用安卓路径（设置 → 关于 → 连点版本号 7 次 → 开发者选项 → USB 调试），但未经核实。",
+        "新机型按「Android TV OS build」（官方写按 10 次，多按几次也行）；老机型是设置 → 设备偏好设置 → 关于 → 连按「Build」7 次。开启后电视会弹「允许 USB 调试吗？」，点允许；部分固件第一次连 5555 需在电视上确认授权。",
+        "三星电视是 Tizen 系统，开发者模式只是给 Tizen Studio 装应用用的，不提供 ADB；ADB 应用管理、装应用、传文件都用不上。本应用支持纯红外遥控，三星用户就用红外遥控。"};
       LinearLayout panel=column();panel.setPadding(dp(20),dp(10),dp(20),dp(10));
       panel.addView(text("以下是操作示意图，不是电视截图。不同型号、系统版本和地区的菜单可能不同，部分机型不提供 ADB。",13,MUTED));
       if(steps[w]==null){gap(panel,8);TextView no=text(noGuide[w],15,INK);no.setPadding(dp(14),dp(14),dp(14),dp(14));no.setBackground(shape(UiPalette.color(0xff203348),14));panel.addView(no,full());}

@@ -1,0 +1,80 @@
+Filetype: IR signals file
+Version: 1
+# Source: https://raw.githubusercontent.com/flipperdevices/IRDB/dev/database/categories/TVs/Samsung/Samsung_125_xm_1_4190/Samsung_125_xm_1_4190.ir
+# License: MIT (flipperdevices/IRDB) — see licenses/Flipper-Official-IRDB-MIT.txt
+# Bundled for LinkDeck 0.19.17: keys renamed to the app's canonical names, non-13 keys stripped; codes unchanged from source.
+# Keys verified against IrCodes.fromFlipper rules (NEC/NECext/Samsung32/raw only, <=20 keys, <=64KB).
+# NOT yet verified on a physical TV — treat as candidate until a user confirms it on their set.
+# Rename: video (cmd 0x01) -> SOURCE; 0x01 is the Samsung source code in every sibling file. No HOME key in source.
+#
+name: POWER
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 02 00 00 00
+#
+name: UP
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 60 00 00 00
+#
+name: DOWN
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 61 00 00 00
+#
+name: LEFT
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 65 00 00 00
+#
+name: RIGHT
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 62 00 00 00
+#
+name: OK
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 68 00 00 00
+#
+name: BACK
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 2D 00 00 00
+#
+name: MENU
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 1A 00 00 00
+#
+name: MUTE
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 0F 00 00 00
+#
+name: VOL_UP
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 07 00 00 00
+#
+name: VOL_DOWN
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 0B 00 00 00
+#
+name: SOURCE
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 01 00 00 00
