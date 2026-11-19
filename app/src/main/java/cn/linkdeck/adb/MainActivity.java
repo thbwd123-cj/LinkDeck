@@ -1328,6 +1328,10 @@ public class MainActivity extends Activity {
     LinearLayout input = card(body);remoteInputPanel=input;input.setVisibility(View.GONE);final ScrollView inputScroll=pageScroll;input.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or_,ob)->{if(v.getVisibility()==View.VISIBLE&&b>t&&b!=ob)inputScroll.post(()->{if(input.isAttachedToWindow()&&input.getVisibility()==View.VISIBLE)inputScroll.smoothScrollTo(0,input.getBottom());});});
     TextView keyboard=button("键盘输入",false,()->toggleRemoteKeyboard());
     LinearLayout.LayoutParams kp=new LinearLayout.LayoutParams(0,-2,1);kp.rightMargin=dp(5);shortcuts.addView(keyboard,kp);LinearLayout.LayoutParams sp=new LinearLayout.LayoutParams(0,-2,1);sp.leftMargin=dp(5);shortcuts.addView(button("截取设备屏幕",false,()->capture()),sp);
+    if(ProjectorKeys.isObeProjector(properties)){
+      section(body,"投影","大眼橙投影专属入口：直接打开对焦 / 梯形校正。");
+      pair(body,"对焦设置",()->openProjectorScreen("打开对焦设置",ProjectorKeys.FOCUS),"梯形校正",()->openProjectorScreen("打开梯形校正",ProjectorKeys.KEYSTONE));
+    }
     section(input, "输入文字", "直接输入仅支持英文、数字及部分符号；中文需设备端输入法支持，本版暂不提供。");
     EditText e = field("例如：youtube 或搜索关键词", draftRemote);
     remoteInput = e;
@@ -1736,6 +1740,18 @@ public class MainActivity extends Activity {
             keyPending.set(false);
           }
         });
+  }
+
+  private void openProjectorScreen(String title,String component){
+    if(!requestConnection())return;
+    if(!capabilityAllowed(DeviceCapabilities.REMOTE))return;
+    run(title,()->{
+      require();
+      String out=adb.shell(ProjectorKeys.launchCommand(component),15000).require();
+      if(out==null)out="";
+      if(out.contains("Error")||out.contains("does not exist")||out.contains("Permission Denial")||out.contains("Unable to"))throw new IOException("设备没有这个功能");
+      return "已打开";
+    },null);
   }
 
   private void capture() {
@@ -4436,17 +4452,26 @@ public class MainActivity extends Activity {
     ScrollView scroll=new ScrollView(this);LinearLayout list=column();scroll.addView(list);content.addView(scroll,new LinearLayout.LayoutParams(-1,Math.min(dp(480),(int)(getResources().getDisplayMetrics().heightPixels*.65f))));
     if(state.outcome!=null){list.addView(text(state.outcome,14,TEAL));gap(list,10);}
     DesktopDiagnostic.Verdict verdict=DesktopDiagnostic.classify(state.snapshot);TextView stateBadge=text(verdict.state,20,verdict.state.equals(DesktopDiagnostic.CRASH)?UiPalette.color(0xffff9292):TEAL);stateBadge.setTypeface(null,Typeface.BOLD);list.addView(stateBadge);list.addView(text(verdict.reason,13,MUTED));gap(list,10);
-    TextView summary=text(DesktopAssistant.summary(state.snapshot),14,INK);summary.setTextIsSelectable(true);list.addView(summary);
+    TextView summary=text(DesktopAssistant.summary(state.snapshot),14,INK);summary.setTextIsSelectable(true);summary.setVisibility(View.GONE);list.addView(summary);
+    final TextView[] detailToggle={null};
+    detailToggle[0]=button("查看详细诊断",false,()->{boolean show=summary.getVisibility()!=View.VISIBLE;summary.setVisibility(show?View.VISIBLE:View.GONE);detailToggle[0].setText(show?"收起详细诊断":"查看详细诊断");});
+    LinearLayout.LayoutParams dtp=full();dtp.topMargin=dp(8);list.addView(detailToggle[0],dtp);gap(list,10);
     if(state.manual!=null){gap(list,10);list.addView(text(state.manual,13,TEAL));}
     DesktopAssistant.Profile other=profile==DesktopAssistant.AERIAL?DesktopAssistant.HALO:DesktopAssistant.AERIAL;
     DesktopState otherState=profile==DesktopAssistant.AERIAL?haloDesktop:aerialDesktop;
     addButton(list,"切换到 "+other.displayName,false,()->switchDesktopAction(profile,state,other,otherState));
-    addButton(list,"故障报告",false,()->faultReport(profile,state));
-    addButton(list,"修复缺失授权 / 守护",true,()->reviewDesktopRepair(profile,state));
+    TextView repair=button("修复缺失授权 / 守护",true,()->reviewDesktopRepair(profile,state));
+    if(DesktopAssistant.candidates(state.snapshot).isEmpty()){repair.setEnabled(false);repair.setAlpha(.38f);repair.setContentDescription("没有可直接修复的缺失项");}
+    LinearLayout.LayoutParams rp=full();rp.topMargin=dp(8);list.addView(repair,rp);
     pair(list,"主页键人工验收",()->reviewHomeCheck(profile,state),"重新检查",()->{if(profile==DesktopAssistant.AERIAL)checkDesktop();else checkHaloDesktop();});
-    pair(list,"恢复本 App 的修改",()->reviewDesktopRestore(profile,state),"导出诊断报告",()->exportDesktopReport(profile,state));
-    pair(list,"重新启动 "+profile.displayName,()->restartDesktop(profile,state),"电视桌面设置",()->{if(desktopCurrent(profile,state))command("打开电视桌面设置","am start -a android.settings.HOME_SETTINGS",null);});
-    addButton(list,"打开电视无障碍设置",false,()->{if(desktopCurrent(profile,state))command("打开电视无障碍设置","am start -a android.settings.ACCESSIBILITY_SETTINGS",null);});
+    final TextView[] moreToggle={null};
+    LinearLayout more=column();more.setVisibility(View.GONE);
+    moreToggle[0]=button("更多操作",false,()->{boolean show=more.getVisibility()!=View.VISIBLE;more.setVisibility(show?View.VISIBLE:View.GONE);moreToggle[0].setText(show?"收起更多操作":"更多操作");});
+    LinearLayout.LayoutParams mtp=full();mtp.topMargin=dp(8);list.addView(moreToggle[0],mtp);list.addView(more);
+    addButton(more,"故障报告",false,()->faultReport(profile,state));
+    pair(more,"恢复本 App 的修改",()->reviewDesktopRestore(profile,state),"导出诊断报告",()->exportDesktopReport(profile,state));
+    pair(more,"重新启动 "+profile.displayName,()->restartDesktop(profile,state),"电视桌面设置",()->{if(desktopCurrent(profile,state))command("打开电视桌面设置","am start -a android.settings.HOME_SETTINGS",null);});
+    addButton(more,"打开电视无障碍设置",false,()->{if(desktopCurrent(profile,state))command("打开电视无障碍设置","am start -a android.settings.ACCESSIBILITY_SETTINGS",null);});
     state.dialog=new DeckDialogBuilder(this).setTitle(profile.displayName+" 桌面助手").setView(content).setNegativeButton("关闭",null).create();state.dialog.show();
   }
   private void switchDesktopAction(DesktopAssistant.Profile from,DesktopState fromState,DesktopAssistant.Profile to,DesktopState toState) {

@@ -61,8 +61,9 @@ public class DesktopVerificationChecks {
   DesktopAssistant.Snapshot toUb=DesktopAssistant.inspect(unbound,"fixture",DesktopAssistant.HALO);
   try{DesktopAssistant.switchDesktop(unbound,new DesktopChecks.Memory(),"fixture",fromUb,toUb);throw new AssertionError("switch must remain incomplete when guard never binds");}catch(DesktopAssistant.VerificationFailure e){ok(unbound.pauses==2&&e.snapshot.outcome.contains("守护未运行"),"switch still fails after bounded re-checks when guard never binds");}
   Device unknown=new Device();unknown.unknownBound=true;
-  DesktopAssistant.VerificationFailure uf=rejected(unknown,new DesktopChecks.Memory(),DesktopAssistant.inspect(unknown,"fixture",DesktopAssistant.AERIAL),Arrays.asList(DesktopAssistant.ACCESS));
-  ok(uf.snapshot.bound==null&&uf.snapshot.outcome.contains("未确认"),"unrecognized binding stays unknown rather than success or stopped");
+  DesktopAssistant.Snapshot uf=DesktopAssistant.repair(unknown,new DesktopChecks.Memory(),"fixture",DesktopAssistant.inspect(unknown,"fixture",DesktopAssistant.AERIAL),Arrays.asList(DesktopAssistant.ACCESS));
+  ok(uf.bound==null&&uf.outcome.contains("配置已写入，绑定状态未确认")&&uf.outcomeDetail.contains("主页键"),"unrecognized binding no longer fails repair once config is written; HOME key verifies it");
+  ok(unknown.writes.stream().filter(c->c.startsWith("settings put secure "+DesktopAssistant.ACCESS)).count()==1&&unknown.writes.stream().filter(c->c.startsWith("settings put secure "+DesktopAssistant.ENABLED)).count()==1,"unrecognized binding never repeats config writes");
   String event=crash(93,DesktopAssistant.PKG,"2026-10-31 12:00:00",COMPAT);
   Device crash=new Device();crash.afterWriteRecords=event;DesktopChecks.Memory cm=new DesktopChecks.Memory();DesktopAssistant.VerificationFailure cf=rejected(crash,cm,DesktopAssistant.inspect(crash,"fixture",DesktopAssistant.AERIAL),Arrays.asList(DesktopAssistant.PERMISSION,DesktopAssistant.ACCESS,DesktopAssistant.NOTIFY));
   ok(cf.getMessage().contains("兼容性崩溃")&&cf.snapshot.outcome.equals("应用崩溃"),"new same-version guard compatibility crash aborts repair");

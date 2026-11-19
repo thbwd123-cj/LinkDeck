@@ -171,7 +171,12 @@ public final class DesktopAssistant {
         result.outcomeDetail=requireGuard?"检测到守护已绑定；仍需实体主页键和开机验收。":"所选配置已核实；不代表守护或主页接管已成功。";return result;
       }
     }
-    throw new VerificationFailure(result,result.bound==null?"运行状态未确认":"配置完成，守护未运行",result.bound==null?"所选配置已复查，但限次检查无法确认守护绑定；没有重复写入。":"所选配置已复查，但限次检查仍未检测到守护绑定；已停止，没有重复开启或重启。请查看新的崩溃记录或系统限制。");
+    if(result.bound==null){
+      result.outcome="配置已写入，绑定状态未确认";
+      result.outcomeDetail="所选配置已复查并写入；系统未提供可识别的绑定信息，无法据此确认守护是否运行。请按实体主页键验收。";
+      return result;
+    }
+    throw new VerificationFailure(result,"配置完成，守护未运行","所选配置已复查，但限次检查仍未检测到守护绑定；已停止，没有重复开启或重启。请查看新的崩溃记录或系统限制。");
   }
   /** A start request is not proof that the activity stayed alive. */
   public static Snapshot verifyLaunch(Device d,String endpoint,Snapshot baseline)throws Exception {
