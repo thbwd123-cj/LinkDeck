@@ -428,6 +428,14 @@ public final class DesktopAssistant {
     if(homeStep&&!targetHome.equals(afterTo.values.get(DEFAULT)))throw new VerificationFailure(afterTo,"切换未完成","默认桌面未切到"+tp.displayName+"，没有重复操作；请查看诊断。");
     if(!enabled.isEmpty()) {
       goals(afterTo,enabled);
+      // The guard service needs seconds to bind after being enabled; re-check
+      // a few times like verifyOperation instead of failing on one read-back.
+      for(int attempt=0;attempt<2&&!Boolean.TRUE.equals(afterTo.bound);attempt++){
+        d.pause(1500);
+        afterTo=inspect(d,endpoint,tp);identityCheck(nowTo,afterTo);supportedUser(afterTo);
+        if(afterTo.code!=nowTo.code)throw new VerificationFailure(afterTo,"结果未确认","切换后桌面版本已变化，请重新检查。");
+        goals(afterTo,enabled);
+      }
       if(!Boolean.TRUE.equals(afterTo.bound))throw new VerificationFailure(afterTo,afterTo.bound==null?"运行状态未确认":"配置完成，守护未运行","已切换配置，但限次检查无法确认"+tp.displayName+"守护绑定；没有重复开启。");
     }
     afterTo.outcome="已切换到 "+tp.displayName;

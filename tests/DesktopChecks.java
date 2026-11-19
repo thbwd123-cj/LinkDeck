@@ -18,14 +18,15 @@ public class DesktopChecks {
    c=c.replace("settings --user 0 ","settings ");
    if(c.startsWith("getprop ")){switch(c.substring(8)){case "ro.product.model":return model;case "ro.product.brand":return "coocaa";case "ro.build.version.release":return "5.1";case "ro.build.version.sdk":return ""+sdk;case "ro.serialno":return serial;case "ro.build.fingerprint":return "coocaa/fixture/build09";}return "";}
    if(c.equals("pm path app.orchard.tv")){if(gone)throw new IOException("Error: package app.orchard.tv was not found");return "package:/data/app/aerial.apk";}
+   if(c.equals("pm path app.halotv.launcher"))return "package:/data/app/halo.apk";
    if(c.equals("pm path com.mitv.tvhome"))return xiaomi?"package:/system/app/mitv.apk":"";
    if(c.startsWith("pm path "))return "";
    if(c.equals("dumpsys dropbox --print data_app_crash"))return "Drop box contents: 0 entries\nSearching for: data_app_crash\n";
-   if(c.startsWith("cmd package query-activities"))return DesktopAssistant.HOME;
+   if(c.startsWith("cmd package query-activities"))return DesktopAssistant.HOME+"\n"+DesktopAssistant.HALO.home;
    if(c.startsWith("dumpsys package"))return "versionCode=93\n versionName=1.73\n app.orchard.tv.guard.HomeGuardService\n app.orchard.tv.guard.RevivalListener\n android.intent.category.HOME\n android.permission.WRITE_SECURE_SETTINGS: granted="+permission;
    if(c.startsWith("settings get secure ")){String k=c.substring(20);if(k.equals(blocked))throw new IOException("setting unavailable");String v=settings.get(k);return v==null?"null":v;}
    if(c.contains("resolve-activity"))return home==null?"No activity found":home;
-   if(c.equals("dumpsys accessibility"))return "User state[attributes:{id=0, currentUser=true}\nBound services:{"+((bound||canBind&&DesktopAssistant.contains(settings.get(DesktopAssistant.ACCESS),DesktopAssistant.GUARD)&&"1".equals(settings.get(DesktopAssistant.ENABLED)))?"Service[id=app.orchard.tv/.guard.HomeGuardService]":"")+"}\nEnabled services:{app.orchard.tv/.guard.HomeGuardService}";
+   if(c.equals("dumpsys accessibility")){String boundId="";if(bound||canBind&&"1".equals(settings.get(DesktopAssistant.ENABLED))){if(DesktopAssistant.contains(settings.get(DesktopAssistant.ACCESS),DesktopAssistant.GUARD))boundId="Service[id=app.orchard.tv/.guard.HomeGuardService]";else if(DesktopAssistant.contains(settings.get(DesktopAssistant.ACCESS),DesktopAssistant.HALO.guard))boundId="Service[id=app.halotv.launcher/app.orchard.tv.guard.HomeGuardService]";}return "User state[attributes:{id=0, currentUser=true}\nBound services:{"+boundId+"}\nEnabled services:{app.orchard.tv/.guard.HomeGuardService}";}
    if(c.startsWith("dumpsys window"))return "mCurrentFocus=Window{abc u0 "+focus+"}\n secret fake-account@example.invalid";
    writes.add(c);
    if(c.startsWith("pm grant"))permission=true;else if(c.startsWith("pm revoke"))permission=false;

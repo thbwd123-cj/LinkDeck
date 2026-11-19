@@ -4017,7 +4017,7 @@ public class MainActivity extends Activity {
   }
   private static final class InstalledProof {String pkg,name,sha,signers,path;long code;boolean homeCategory;}
   private InstalledProof installedProof(AdbClient client,String pkg)throws Exception{
-    if(!Arrays.asList(AerialSupport.FULL,AerialSupport.LITE).contains(pkg))throw new IOException("非 Aerial 应用");
+    if(!Arrays.asList(AerialSupport.FULL,AerialSupport.LITE,HaloSupport.FULL,HaloSupport.LITE).contains(pkg))throw new IOException("非 Aerial / Halo 桌面应用");
     return readInstalledProof(client,pkg);
   }
   private InstalledProof readInstalledProof(AdbClient client,String pkg)throws Exception{

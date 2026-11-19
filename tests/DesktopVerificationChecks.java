@@ -47,6 +47,19 @@ public class DesktopVerificationChecks {
   Device late=new Device(){public void pause(long ms){super.pause(ms);if(pauses==2)canBind=true;}};late.canBind=false;
   DesktopAssistant.Snapshot la=DesktopAssistant.repair(late,new DesktopChecks.Memory(),"fixture",DesktopAssistant.inspect(late,"fixture",DesktopAssistant.AERIAL),Arrays.asList(DesktopAssistant.ACCESS));
   ok(late.pauses==2&&Boolean.TRUE.equals(la.bound)&&la.outcome.contains("绑定已核实"),"late guard binding can finish within bounded read-only wait");
+  Device sw=new Device(){public void pause(long ms){super.pause(ms);if(pauses==2)canBind=true;}};sw.canBind=false;sw.sdk=28;
+  sw.settings.put(DesktopAssistant.ACCESS,DesktopAssistant.GUARD);
+  DesktopAssistant.Snapshot fromSw=DesktopAssistant.inspect(sw,"fixture",DesktopAssistant.AERIAL);
+  DesktopAssistant.Snapshot toSw=DesktopAssistant.inspect(sw,"fixture",DesktopAssistant.HALO);
+  DesktopAssistant.Snapshot done=DesktopAssistant.switchDesktop(sw,new DesktopChecks.Memory(),"fixture",fromSw,toSw);
+  ok(sw.pauses==2&&Boolean.TRUE.equals(done.bound)&&done.outcome.contains("已切换到 Halo TV"),"late Halo guard binding can finish within bounded switch re-checks");
+  ok(!DesktopAssistant.contains(sw.settings.get(DesktopAssistant.ACCESS),DesktopAssistant.GUARD)&&DesktopAssistant.contains(sw.settings.get(DesktopAssistant.ACCESS),DesktopAssistant.HALO.guard),"switch removes outgoing guard and enables incoming guard");
+  ok(sw.home.equals(DesktopAssistant.HALO.home),"switch sets incoming default desktop");
+  Device unbound=new Device();unbound.canBind=false;unbound.sdk=28;
+  unbound.settings.put(DesktopAssistant.ACCESS,DesktopAssistant.GUARD);
+  DesktopAssistant.Snapshot fromUb=DesktopAssistant.inspect(unbound,"fixture",DesktopAssistant.AERIAL);
+  DesktopAssistant.Snapshot toUb=DesktopAssistant.inspect(unbound,"fixture",DesktopAssistant.HALO);
+  try{DesktopAssistant.switchDesktop(unbound,new DesktopChecks.Memory(),"fixture",fromUb,toUb);throw new AssertionError("switch must remain incomplete when guard never binds");}catch(DesktopAssistant.VerificationFailure e){ok(unbound.pauses==2&&e.snapshot.outcome.contains("守护未运行"),"switch still fails after bounded re-checks when guard never binds");}
   Device unknown=new Device();unknown.unknownBound=true;
   DesktopAssistant.VerificationFailure uf=rejected(unknown,new DesktopChecks.Memory(),DesktopAssistant.inspect(unknown,"fixture",DesktopAssistant.AERIAL),Arrays.asList(DesktopAssistant.ACCESS));
   ok(uf.snapshot.bound==null&&uf.snapshot.outcome.contains("未确认"),"unrecognized binding stays unknown rather than success or stopped");
