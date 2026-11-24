@@ -396,7 +396,7 @@ public class MainActivity extends Activity {
   }
 
   private TextView button(String label, boolean primary, Runnable action) {
-    TextView b = text(label, 14, primary ? AuroraStyle.PRIMARY_TEXT : INK);
+    TextView b = text(label, 14, primary ? AuroraStyle.primaryText() : INK);
     b.setGravity(Gravity.CENTER);
     b.setFocusable(true);
     b.setAccessibilityDelegate(new View.AccessibilityDelegate(){@Override public void onInitializeAccessibilityNodeInfo(View host,AccessibilityNodeInfo info){super.onInitializeAccessibilityNodeInfo(host,info);info.setClassName(Button.class.getName());}});
@@ -544,10 +544,10 @@ public class MainActivity extends Activity {
       LinearLayout glyph = row();
       glyph.setGravity(Gravity.CENTER);
       if(i==page)visual.setBackground(new DepthSurface(getResources().getDisplayMetrics().density,28,true));
-      glyph.addView(new LineIcon(this, i, i == page ? AuroraStyle.PRIMARY_TEXT : MUTED),new LinearLayout.LayoutParams(dp(24), dp(24)));
+      glyph.addView(new LineIcon(this, i, i == page ? AuroraStyle.primaryText() : MUTED),new LinearLayout.LayoutParams(dp(24), dp(24)));
       visual.addView(glyph,new LinearLayout.LayoutParams(dp(54),dp(31)));
       if(i==page)DeckMotion.select(glyph,motionEnabled());
-      TextView label=text(names[i],11,i==page?AuroraStyle.PRIMARY_TEXT:MUTED);
+      TextView label=text(names[i],11,i==page?AuroraStyle.primaryText():MUTED);
       label.setGravity(Gravity.CENTER);
       if(i==page)label.setTypeface(null,Typeface.BOLD);
       visual.addView(label);
@@ -1037,7 +1037,7 @@ public class MainActivity extends Activity {
     top.addView(new TvScene(this),new LinearLayout.LayoutParams(dp(112),dp(112)));
     LinearLayout info=column();info.setPadding(dp(12),dp(2),0,0);TextView name=text(connected()?"客厅电视":"连接你的电视",17,INK);name.setTypeface(null,Typeface.BOLD);info.addView(name);gap(info,7);LinearLayout badge=row();badge(badge,connected()?"已连接":"等待连接",connected()?TEAL:UiPalette.color(0xffffcf80));info.addView(badge);gap(info,8);
     info.addView(text(connected()?device:"让电视，触手可及",12,MUTED));gap(info,4);TextView addressHint=text(connected()?host+":"+prefs.getString("port","5555"):"手机与电视需在同一网络",11,MUTED);addressHint.setSingleLine(true);addressHint.setEllipsize(TextUtils.TruncateAt.MIDDLE);info.addView(addressHint);top.addView(info,new LinearLayout.LayoutParams(0,-2,1));hero.addView(top);
-    TextView openRemote=button(connected()?"打开遥控":"查找电视",false,()->{if(connected())show(1);else discoverDevices();});openRemote.setTextColor(AuroraStyle.PRIMARY_TEXT);GradientDrawable openBg=gradient(UiPalette.color(0xff195252),UiPalette.color(0xff102332),24);openBg.setStroke(dp(1),UiPalette.color(0xff327f84));openRemote.setBackground(new RippleDrawable(ColorStateList.valueOf(UiPalette.color(0x334ce1cd)),new DepthSurface(getResources().getDisplayMetrics().density,24,false,true),null));LinearLayout.LayoutParams op=full();op.topMargin=dp(8);hero.addView(openRemote,op);
+    TextView openRemote=button(connected()?"打开遥控":"查找电视",false,()->{if(connected())show(1);else discoverDevices();});openRemote.setTextColor(AuroraStyle.primaryText());GradientDrawable openBg=gradient(UiPalette.color(0xff195252),UiPalette.color(0xff102332),24);openBg.setStroke(dp(1),UiPalette.color(0xff327f84));openRemote.setBackground(new RippleDrawable(ColorStateList.valueOf(UiPalette.color(0x334ce1cd)),new DepthSurface(getResources().getDisplayMetrics().density,24,false,true),null));LinearLayout.LayoutParams op=full();op.topMargin=dp(8);hero.addView(openRemote,op);
     if(connected()){addButton(hero,"切换电视",false,()->deviceBook());gap(hero,9);TextView keep=text(ConnectionService.backgroundAvailable?"●  后台保持连接 · 点击查看设置":"●  仅当前连接 · 后台保持未启用",11,TEAL);keep.setOnClickListener(v->backgroundHelp());hero.addView(keep);}
     if (pendingInstall != null) {
       LinearLayout pending = card(body);

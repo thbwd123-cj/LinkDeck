@@ -10,7 +10,7 @@ public final class GlassSurface extends Drawable {
   rect.set(b.left+density,b.top+density,b.right-density,b.bottom-density);clip.reset();clip.addRoundRect(rect,radius,radius,Path.Direction.CW);
   fill=AuroraStyle.light()?new LinearGradient(0,b.top,0,b.bottom,new int[]{AuroraStyle.alpha(AuroraStyle.glassTint(),AuroraStyle.glassTopAlpha()),AuroraStyle.alpha(AuroraStyle.glassTint(),AuroraStyle.glassBottomAlpha())},null,Shader.TileMode.CLAMP):new LinearGradient(b.left,b.top,b.right,b.bottom,new int[]{AuroraStyle.GLASS_SHEEN_TOP,AuroraStyle.GLASS_SHEEN_MID,AuroraStyle.GLASS_SHEEN_BOTTOM},new float[]{0,.55f,1},Shader.TileMode.CLAMP);
   edge=new LinearGradient(b.left,b.top,b.right,b.bottom,new int[]{0x29ffffff,0x29ffffff},null,Shader.TileMode.CLAMP);
-  glow=AuroraGlow.gradient(b.left,b.top,b.right,b.bottom);
+  glow=AuroraGlow.frameGradient(b.left,b.top,b.right,b.bottom);
   topLine=new LinearGradient(b.left,b.top,b.right,b.top,new int[]{0x00ffffff,0x70ffffff,0x00ffffff},new float[]{0,.42f,1},Shader.TileMode.CLAMP);
  }
  void refresh(){if(owner.isAttachedToWindow()&&owner.isShown())invalidateSelf();}

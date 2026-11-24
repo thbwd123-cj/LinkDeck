@@ -15,9 +15,12 @@ public final class AuroraChecks {
    for(int bg:new int[]{base,surface,glass,key})for(int fg:new int[]{UiPalette.color(0xffedf5ff),UiPalette.color(0xffa4b3c8)})check(contrast(fg,bg)>=4.5,"Text contrast "+id+" "+Integer.toHexString(bg)+" = "+contrast(fg,bg));
    if(AuroraStyle.light())check(AuroraStyle.baseTop()==AuroraStyle.baseBottom(),"Light theme keeps a flat base");
    else check(luminance(AuroraStyle.baseTop())>luminance(AuroraStyle.baseBottom()),"Dark sky lifts toward the top "+id);
-   check(java.util.Arrays.equals(AuroraStyle.primaryStops(),new int[]{AuroraStyle.glowStart(),AuroraStyle.accent(),AuroraStyle.glowEnd()}),"Primary gradient runs glowStart, accent, glowEnd "+id);
-   check(contrast(AuroraStyle.PRIMARY_TEXT,AuroraStyle.glowStart())>=4.5,"Primary text readable on gradient start "+id);
-   check(contrast(AuroraStyle.PRIMARY_TEXT,AuroraStyle.glowEnd())>=3,"Primary text readable on gradient end "+id);
+   if(AuroraStyle.light())check(java.util.Arrays.equals(AuroraStyle.primaryStops(),new int[]{0xff67e8f9,0xff38bdf8,0xff818cf8}),"Light primary gradient runs soft cyan, sky, indigo "+id);
+   else check(java.util.Arrays.equals(AuroraStyle.primaryStops(),new int[]{AuroraStyle.glowStart(),AuroraStyle.accent(),AuroraStyle.glowEnd()}),"Primary gradient runs glowStart, accent, glowEnd "+id);
+   check(AuroraStyle.primaryText()==(AuroraStyle.light()?0xff0b2a3d:AuroraStyle.PRIMARY_TEXT),"Primary text ink follows theme "+id);
+   check(contrast(AuroraStyle.primaryText(),AuroraStyle.primaryStops()[0])>=4.5,"Primary text readable on gradient start "+id);
+   check(contrast(AuroraStyle.primaryText(),AuroraStyle.primaryStops()[2])>=3,"Primary text readable on gradient end "+id);
+   if(AuroraStyle.light())check(AuroraStyle.frameStart()==0xff67e8f9&&AuroraStyle.frameEnd()==0xff818cf8,"Light card frame runs soft cyan to indigo "+id);
    check(contrast(AuroraStyle.accent(),surface)>=3,"Selected navigation visible "+id);
   }
   check(AuroraStyle.GREEN==0xff2ef2c4&&AuroraStyle.VIOLET==0xff7a5cff,"Prototype colors");
