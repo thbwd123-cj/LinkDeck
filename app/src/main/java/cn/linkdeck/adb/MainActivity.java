@@ -183,6 +183,10 @@ public class MainActivity extends Activity {
   public void onResume() {
     super.onResume();
     resumed = true;
+    if (ConnectionService.session != null
+        && Build.VERSION.SDK_INT >= 33
+        && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+            == PackageManager.PERMISSION_GRANTED) ConnectionService.repost(this);
     recoverConnection();
     ui.removeCallbacks(connectionMonitor);
     ui.post(connectionMonitor);
@@ -237,7 +241,6 @@ public class MainActivity extends Activity {
     if(haloCenterDialog!=null)haloCenterDialog.dismiss();
     if(genericDialog!=null)genericDialog.dismiss();
     if(genericPlan!=null)genericPlan.clean();
-    if (isFinishing()) ConnectionService.disconnect(this);
     copyWork.shutdownNow();
     recovery.shutdownNow();
     work.shutdownNow();
@@ -885,11 +888,24 @@ public class MainActivity extends Activity {
   }
 
   private void backgroundHelp() {
+    boolean notifyGranted =
+        Build.VERSION.SDK_INT < 33
+            || checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED;
+    String state =
+        "后台服务："
+            + (ConnectionService.backgroundAvailable ? "正在运行" : "未运行")
+            + "\n通知权限："
+            + (notifyGranted ? "已开启" : "未开启（通知栏看不到保活通知）")
+            + (ConnectionService.lastStartError != null
+                ? "\n上次启动失败：" + ConnectionService.lastStartError
+                : "");
     new DeckDialogBuilder(this)
         .setTitle("后台连接")
         .setMessage(
-            "连接后会通过前台服务保持会话，通知栏可随时断开。返回应用时会检测连接，失效后重新连接。\n\n"
-                + "如果手机系统仍限制后台运行，可在应用设置中允许后台活动。明确退出或手动断开后，不会自动连接。")
+            "连接后会通过前台服务保持会话，通知栏可随时断开。划掉应用后连接继续保持，每 60 秒检查一次，断了自动重连。返回应用时会检测连接，失效后重新连接。\n\n"
+                + state
+                + "\n\n如果手机系统仍限制后台运行，可在应用设置中允许后台活动。明确退出或手动断开后，不会自动连接。")
         .setNegativeButton("知道了", null)
         .setPositiveButton(
             "应用设置",
@@ -1212,7 +1228,7 @@ public class MainActivity extends Activity {
           applyDeviceInfo(p);
           try {
             boolean backgroundReady = ConnectionService.attach(this, adb, h, p, device, properties);
-            if (!backgroundReady) ui.post(() -> dialog("后台连接未启用", "系统暂不允许启动后台服务；当前页面仍可使用连接，离开应用后连接可能中断。"));
+            if (!backgroundReady) ui.post(() -> dialog("后台连接未启用", (ConnectionService.lastStartError!=null?ConnectionService.lastStartError:"系统暂不允许启动后台服务。")+"当前页面仍可使用连接，离开应用后连接可能中断。"));
             if(ConnectionService.session!=null)ConnectionService.session.capabilities=capabilitySnapshot;
             if (Build.VERSION.SDK_INT >= 33
                 && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -1220,6 +1236,12 @@ public class MainActivity extends Activity {
                 && !prefs.getBoolean("notificationAsked", false)) {
               prefs.edit().putBoolean("notificationAsked", true).apply();
               requestPermissions(new String[] {android.Manifest.permission.POST_NOTIFICATIONS}, 41);
+            } else if (Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED
+                && !prefs.getBoolean("notificationGuideShown", false)) {
+              prefs.edit().putBoolean("notificationGuideShown", true).apply();
+              ui.post(() -> new DeckDialogBuilder(this).setTitle("通知权限未开启").setMessage("后台服务正在运行，但系统把「正在保持电视连接」这条通知藏起来了（只能在任务管理器里看到）。去系统设置里打开轻连的通知，就能在通知栏看到它、随时断开。").setNegativeButton("知道了", null).setPositiveButton("去开启通知", (d, w) -> startActivity(new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName()))).show());
             }
           } catch (Exception e) {
             dialog("后台连接未启用", "当前连接可以使用，但后台服务启动失败：" + message(e));
