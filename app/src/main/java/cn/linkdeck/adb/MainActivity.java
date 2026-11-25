@@ -12,6 +12,7 @@ import android.graphics.drawable.RippleDrawable;
 import android.net.Uri;
 import android.os.*;
 import android.provider.OpenableColumns;
+import android.speech.*;
 import android.text.*;
 import android.view.*;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -140,6 +141,10 @@ public class MainActivity extends Activity {
   private EditText commandInput, remoteInput;
   private TextView remoteInputStatus, remoteRestoreButton;
   private String pendingChineseText;
+  private SpeechRecognizer voiceRecognizer;
+  private AlertDialog voiceDialog;
+  private TextView voiceStatus;
+  private boolean voiceListening, pendingVoice;
   private boolean connectionPromptVisible;
 
   private interface Job {
@@ -197,8 +202,19 @@ public class MainActivity extends Activity {
   @Override
   public void onPause() {
     resumed = false;
+    stopVoiceListening();
     ui.removeCallbacks(connectionMonitor);
     super.onPause();
+  }
+
+  @Override
+  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (requestCode == 42 && pendingVoice) {
+      pendingVoice = false;
+      if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) beginListening();
+      else dialog("语音需要录音权限", "不给麦克风权限就听不到你说话。可以在系统设置 → 应用 → 轻连 → 权限里打开录音权限，再点麦克风试一次。");
+    }
   }
 
   @Override
@@ -226,6 +242,7 @@ public class MainActivity extends Activity {
   @Override
   public void onDestroy() {
     super.onDestroy();
+    stopVoiceListening();
     ui.removeCallbacksAndMessages(null);
     if (connectingClient != null) connectingClient.close();
     if(activePairing!=null)activePairing.cancel();
@@ -494,7 +511,7 @@ public class MainActivity extends Activity {
     TextView version = text(AppVersion.NAME, 11, pageAccent());
     version.setPadding(dp(10), dp(5), dp(10), dp(5));
     version.setBackground(shape(pageTint(), 20));
-    if(page==1){if(!irMode())brand.addView(iconButton("键盘输入",10,INK,()->toggleRemoteKeyboard()),new LinearLayout.LayoutParams(dp(44),dp(44)));LinearLayout.LayoutParams powerLp=new LinearLayout.LayoutParams(dp(44),dp(44));powerLp.leftMargin=dp(8);View power=iconButton("电源 / 待机",11,RED,()->confirm("切换电源状态","可能使设备进入待机。",()->{if(irMode())irSend("POWER");else key(26);}));markIrKey(power,"POWER");brand.addView(power,powerLp);logo.setContentDescription("界面设置，遥控器页面，版本 "+AppVersion.NAME);logo.setFocusable(true);logo.setAccessibilityDelegate(new View.AccessibilityDelegate(){@Override public void onInitializeAccessibilityNodeInfo(View host,AccessibilityNodeInfo info){super.onInitializeAccessibilityNodeInfo(host,info);info.setClassName(Button.class.getName());}});logo.setOnClickListener(v->appearance());}else brand.addView(version);version.setContentDescription("界面设置，版本 "+AppVersion.NAME);version.setOnClickListener(v->appearance());
+    if(page==1){if(!irMode()){brand.addView(iconButton("语音",14,INK,()->startVoiceInput()),new LinearLayout.LayoutParams(dp(44),dp(44)));brand.addView(iconButton("键盘输入",10,INK,()->toggleRemoteKeyboard()),new LinearLayout.LayoutParams(dp(44),dp(44)));}LinearLayout.LayoutParams powerLp=new LinearLayout.LayoutParams(dp(44),dp(44));powerLp.leftMargin=dp(8);View power=iconButton("电源 / 待机",11,RED,()->confirm("切换电源状态","可能使设备进入待机。",()->{if(irMode())irSend("POWER");else key(26);}));markIrKey(power,"POWER");brand.addView(power,powerLp);logo.setContentDescription("界面设置，遥控器页面，版本 "+AppVersion.NAME);logo.setFocusable(true);logo.setAccessibilityDelegate(new View.AccessibilityDelegate(){@Override public void onInitializeAccessibilityNodeInfo(View host,AccessibilityNodeInfo info){super.onInitializeAccessibilityNodeInfo(host,info);info.setClassName(Button.class.getName());}});logo.setOnClickListener(v->appearance());}else brand.addView(version);version.setContentDescription("界面设置，版本 "+AppVersion.NAME);version.setOnClickListener(v->appearance());
     brand.addView(iconButton("设置",4,MUTED,()->settingsMenu()),new LinearLayout.LayoutParams(dp(44),dp(44)));
     header.addView(brand);
     status =
@@ -1792,8 +1809,12 @@ public class MainActivity extends Activity {
   /** 手机键盘发送：英文数字走 input text；中文走 ADBKeyBoard 的 base64 广播；未装输入法时提示安装。 */
   private void sendRemoteText() {
     if (remoteInput == null) return;
-    String value = remoteInput.getText().toString();
-    if (value.isEmpty()) return;
+    sendText(remoteInput.getText().toString());
+  }
+
+  /** 发送文字到电视：英文数字走 input text，中文走 ADBKeyBoard 广播；语音识别也走这里。 */
+  private void sendText(String value) {
+    if (value == null || value.isEmpty()) return;
     if (value.contains("%")) { dialog("暂不支持 % 字符", "输入内容里不能有 %，请去掉再发送。"); return; }
     if (TvKeyboard.isAscii(value)) {
       run("输入文字", () -> { require(); adb.shell(TvKeyboard.textCommand(value)).require(); return "已发送"; }, null);
@@ -1893,6 +1914,177 @@ public class MainActivity extends Activity {
         ui.post(() -> { if (remoteInputStatus != null) remoteInputStatus.setText("中文输入法：状态未确认（连接后重试）"); });
       }
     });
+  }
+
+  /** 语音遥控：点麦克风说话。指令走 remoteKey()，搜片文字走 sendText()。 */
+  private void startVoiceInput() {
+    if (!connected()) { toast("请先连接电视"); return; }
+    if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+      dialog("这台手机没有语音识别服务", "语音要靠手机系统自带的识别服务转文字，这台手机上暂时没有可用的。请确认 Google 应用已安装并更新到最新版，或在系统设置里开启语音识别服务，再试一次。");
+      return;
+    }
+    if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+      pendingVoice = true;
+      requestPermissions(new String[] {android.Manifest.permission.RECORD_AUDIO}, 42);
+      return;
+    }
+    beginListening();
+  }
+
+  private void beginListening() {
+    stopVoiceListening();
+    voiceRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+    voiceRecognizer.setRecognitionListener(new RecognitionListener() {
+      public void onReadyForSpeech(Bundle params) { voiceHeard("正在听…"); }
+      public void onBeginningOfSpeech() { voiceHeard("正在听…"); }
+      public void onRmsChanged(float rmsdB) {}
+      public void onBufferReceived(byte[] buffer) {}
+      public void onEndOfSpeech() { voiceHeard("识别中…"); }
+      public void onError(int error) {
+        String reason;
+        switch (error) {
+          case SpeechRecognizer.ERROR_NETWORK: reason = "网络有问题，语音识别需要联网"; break;
+          case SpeechRecognizer.ERROR_NO_MATCH: reason = "没听清，再说一次"; break;
+          case SpeechRecognizer.ERROR_SPEECH_TIMEOUT: reason = "没听到声音，再说一次"; break;
+          case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS: reason = "没有录音权限，请在系统设置里允许轻连使用麦克风"; break;
+          case SpeechRecognizer.ERROR_RECOGNIZER_BUSY: reason = "识别器正忙，稍后再试"; break;
+          default: reason = "识别服务出了点问题，稍后再试";
+        }
+        stopVoiceListening();
+        toast(reason);
+      }
+      public void onResults(Bundle results) {
+        ArrayList<String> heard = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        stopVoiceListening();
+        if (heard == null || heard.isEmpty()) { toast("没听清，再说一次"); return; }
+        handleVoiceResult(heard);
+      }
+      public void onPartialResults(Bundle partial) {
+        ArrayList<String> heard = partial.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+        if (heard != null && !heard.isEmpty()) voiceHeard("听到：" + heard.get(0));
+      }
+      public void onEvent(int eventType, Bundle params) {}
+    });
+    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, VoiceCommand.LANGUAGE);
+    intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+    intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, VoiceCommand.MAX_RESULTS);
+    voiceListening = true;
+    LinearLayout content = column();
+    content.setPadding(dp(16), dp(8), dp(16), dp(4));
+    voiceStatus = text("正在听…", 15, INK);
+    content.addView(voiceStatus);
+    content.addView(text("说“返回、主页、大点声”，或说“搜索三体”“打开 Jellyfin”。说完停一下就自动识别。", 12, MUTED));
+    voiceDialog = new DeckDialogBuilder(this).setTitle("语音遥控").setView(content)
+        .setNegativeButton("取消", (d, w) -> stopVoiceListening()).show();
+    voiceRecognizer.startListening(intent);
+  }
+
+  private void voiceHeard(String s) {
+    if (voiceStatus != null) voiceStatus.setText(s);
+  }
+
+  private void stopVoiceListening() {
+    voiceListening = false;
+    if (voiceRecognizer != null) {
+      try { voiceRecognizer.cancel(); } catch (Exception ignored) {}
+      try { voiceRecognizer.destroy(); } catch (Exception ignored) {}
+      voiceRecognizer = null;
+    }
+    if (voiceDialog != null) {
+      try { voiceDialog.dismiss(); } catch (Exception ignored) {}
+      voiceDialog = null;
+    }
+    voiceStatus = null;
+  }
+
+  private void handleVoiceResult(java.util.List<String> heard) {
+    VoiceCommand.Result r = VoiceCommand.parse(heard);
+    String top = heard.get(0);
+    if (r.kind == VoiceCommand.Kind.KEY) {
+      remoteKey(r.keyCode);
+      showVoiceResult(top, "已执行：" + voiceKeyName(r.keyCode));
+      return;
+    }
+    if (r.kind == VoiceCommand.Kind.LAUNCH) {
+      launchVoiceApp(top, r.query);
+      return;
+    }
+    if (r.kind == VoiceCommand.Kind.SEARCH) {
+      if (r.query == null || r.query.isEmpty()) { showVoiceResult(top, "没听清要搜什么"); return; }
+      boolean chineseNeedsInstall = !TvKeyboard.isAscii(r.query) && !prefs.getBoolean("tv_keyboard_ready", false);
+      sendText(r.query);
+      if (!chineseNeedsInstall) showVoiceResult(top, "已发到电视：" + r.query);
+      return;
+    }
+    showVoiceResult(top, "没听清");
+  }
+
+  private String voiceKeyName(int code) {
+    switch (code) {
+      case 4: return "返回";
+      case 3: return "主页";
+      case 82: return "菜单";
+      case 23: return "确定";
+      case 19: return "上";
+      case 20: return "下";
+      case 21: return "左";
+      case 22: return "右";
+      case 24: return "音量+";
+      case 25: return "音量-";
+      case 164: return "静音";
+      case 126: return "播放";
+      case 127: return "暂停";
+      case 90: return "快进";
+      case 89: return "快退";
+      case 88: return "上一集";
+      case 87: return "下一集";
+      case 26: return "电源";
+      default: return "按键 " + code;
+    }
+  }
+
+  private void launchVoiceApp(String heard, String query) {
+    Runnable match = () -> {
+      ArrayList<AppRow> hits = new ArrayList<>();
+      String q = VoiceCommand.normalize(query);
+      synchronized (apps) {
+        for (AppRow a : apps) {
+          if (a == null) continue;
+          String name = VoiceCommand.normalize(a.name == null ? "" : a.name);
+          String pkg = VoiceCommand.normalize(a.pkg == null ? "" : a.pkg);
+          if ((!name.isEmpty() && name.contains(q)) || (!pkg.isEmpty() && pkg.contains(q))) hits.add(a);
+        }
+      }
+      if (hits.isEmpty()) {
+        dialog("没找到这个应用", "电视上没找到叫“" + query + "”的应用。先到“电视应用”页点“刷新列表”，再试一次。");
+        return;
+      }
+      if (hits.size() == 1) {
+        AppRow a = hits.get(0);
+        command("启动应用", ApplicationLauncher.command(a.pkg), null);
+        showVoiceResult(heard, "正在打开：" + (a.name == null || a.name.isEmpty() ? a.pkg : a.name));
+        return;
+      }
+      String[] names = new String[hits.size()];
+      for (int i = 0; i < hits.size(); i++) names[i] = hits.get(i).name == null || hits.get(i).name.isEmpty() ? hits.get(i).pkg : hits.get(i).name;
+      new DeckDialogBuilder(this).setTitle("打开哪个应用？")
+          .setItems(names, (d, which) -> command("启动应用", ApplicationLauncher.command(hits.get(which).pkg), null))
+          .setNegativeButton("取消", null).show();
+    };
+    synchronized (apps) {
+      if (apps.isEmpty()) { loadApps(match); return; }
+    }
+    match.run();
+  }
+
+  private void showVoiceResult(String heard, String action) {
+    new DeckDialogBuilder(this).setTitle("语音识别")
+        .setMessage("识别：" + heard + "\n" + action)
+        .setNegativeButton("完成", null)
+        .setPositiveButton("重说", (d, w) -> startVoiceInput())
+        .show();
   }
 
   private void openProjectorScreen(String title,String component){
@@ -2080,7 +2272,9 @@ public class MainActivity extends Activity {
     else loadApps();
   }
 
-  private void loadApps() {
+  private void loadApps() { loadApps(null); }
+
+  private void loadApps(Runnable after) {
     iconsFailed.clear();
     run(
         "读取应用列表",
@@ -2117,6 +2311,7 @@ public class MainActivity extends Activity {
         () -> {
           if (page == 2) renderApps();
           refreshCatalog();
+          if (after != null) after.run();
         });
   }
 

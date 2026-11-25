@@ -80,6 +80,11 @@ public final class LineIcon extends View {
       Path speaker=new Path();speaker.moveTo(3,9);speaker.lineTo(7,9);speaker.lineTo(12,5);speaker.lineTo(12,19);speaker.lineTo(7,15);speaker.lineTo(3,15);speaker.close();c.drawPath(speaker,pen);c.drawArc(new RectF(11,7,19,17),-65,130,false,pen);if(kind==13)c.drawArc(new RectF(9,3,23,21),-65,130,false,pen);
     } else if(kind==9){
       c.drawLine(12,3,12,16,pen);Path down=new Path();down.moveTo(7,11);down.lineTo(12,16);down.lineTo(17,11);c.drawPath(down,pen);Path tray=new Path();tray.moveTo(4,16);tray.lineTo(4,21);tray.lineTo(20,21);tray.lineTo(20,16);c.drawPath(tray,pen);
+    } else if(kind==14){
+      c.drawRoundRect(new RectF(9,3,15,13),3,3,pen);
+      c.drawArc(new RectF(5,10,19,19),0,180,false,pen);
+      c.drawLine(12,19,12,22,pen);
+      c.drawLine(8,22,16,22,pen);
     } else {
       for (int i = 0; i < 3; i++) {
         float x = 5 + i * 7, y = i == 1 ? 8 : 15;
