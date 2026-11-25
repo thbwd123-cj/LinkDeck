@@ -138,6 +138,8 @@ public class MainActivity extends Activity {
   private boolean copying;
   private String draftHost = "", draftPort = "5555", draftCommand = "", draftRemote = "";
   private EditText commandInput, remoteInput;
+  private TextView remoteInputStatus, remoteRestoreButton;
+  private String pendingChineseText;
   private boolean connectionPromptVisible;
 
   private interface Job {
@@ -600,7 +602,8 @@ public class MainActivity extends Activity {
   private void pressState(View view,boolean down){/* Visual only; ordinary click pressed state belongs to the framework. */if(!motionEnabled()){view.setScaleX(1);view.setScaleY(1);view.setTranslationY(0);view.setTranslationZ(0);return;}view.animate().scaleX(down?.96f:1).scaleY(down?.96f:1).translationY(down?dp(1.5f):0).translationZ(down?-dp(2):0).setDuration(down?85:220).setInterpolator(down?new android.view.animation.DecelerateInterpolator():new android.view.animation.OvershootInterpolator(1.1f)).start();}
   private void pressMotion(View v){v.setOnTouchListener((view,event)->{int a=event.getActionMasked();if(a==MotionEvent.ACTION_DOWN)pressState(view,true);else if(a==MotionEvent.ACTION_UP||a==MotionEvent.ACTION_CANCEL)pressState(view,false);return false;});}
   private FrameLayout iconButton(String label,int icon,int color,Runnable action){FrameLayout frame=new FrameLayout(this);TextView hit=button(label,false,action);hit.setElevation(0);frame.setElevation(dp(4));hit.setTextColor(Color.TRANSPARENT);hit.setContentDescription(label);hit.setPadding(0,0,0,0);hit.setMinHeight(0);hit.setBackground(new RippleDrawable(ColorStateList.valueOf(UiPalette.color(0x334ce1cd)),new DepthSurface(getResources().getDisplayMetrics().density,50,false),null));frame.addView(hit,new FrameLayout.LayoutParams(-1,-1));frame.addView(new LineIcon(this,icon,color),new FrameLayout.LayoutParams(dp(23),dp(23),Gravity.CENTER));return frame;}
-  private void toggleRemoteKeyboard(){if(remoteInputPanel!=null)remoteInputPanel.setVisibility(remoteInputPanel.getVisibility()==View.VISIBLE?View.GONE:View.VISIBLE);}
+  private void toggleRemoteKeyboard(){if(remoteInputPanel!=null){boolean opening=remoteInputPanel.getVisibility()!=View.VISIBLE;remoteInputPanel.setVisibility(opening?View.VISIBLE:View.GONE);if(opening)refreshTvKeyboardStatus();}}
+
   private int pageAccent() { return TEAL; }
   private int pageTint() { return UiPalette.color(0xff153d40); }
   private int pageBackground() { return BG; }
@@ -1329,13 +1332,14 @@ public class MainActivity extends Activity {
     for(int i=0;i<modes.length;i++){final String value=modes[i];boolean selectedMode=remoteMode().equals(value);LinearLayout.LayoutParams slot=new LinearLayout.LayoutParams(0,-2,1);slot.setMargins(i==0?0:dp(3),0,i==modes.length-1?0:dp(3),0);TextView choice=button(modeLabels[i]+(selectedMode?" ✓":""),selectedMode,()->{prefs.edit().putString("remote_mode",value).putBoolean("ir_mode",!value.equals("adb")).apply();show(1);});choice.setContentDescription(modeLabels[i]+(selectedMode?"，当前模式":"，切换到此模式"));choice.setSelected(selectedMode);mode.addView(choice,slot);}
     body.addView(mode);gap(body,12);
     if(irMode()&&activeIr()==null)addButton(body,"选择电视品牌与遥控码",true,()->chooseIrBrand());
-    LinearLayout toolbar=row();TextView heading=text("方向控制",13,MUTED);toolbar.addView(heading,new LinearLayout.LayoutParams(0,-2,1));android.widget.Switch large=new android.widget.Switch(this);large.setText("大按键");large.setTextColor(MUTED);large.setTextSize(12);large.setChecked(prefs.getBoolean("largeRemote",false));large.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("largeRemote",on).apply();show(1);});toolbar.addView(large);body.addView(toolbar);gap(body,12);
+    LinearLayout toolbar=row();TextView heading=text("方向控制",13,MUTED);toolbar.addView(heading,new LinearLayout.LayoutParams(0,-2,1));android.widget.Switch large=new android.widget.Switch(this);large.setText("大按键");large.setTextColor(MUTED);large.setTextSize(12);large.setChecked(prefs.getBoolean("largeRemote",false));large.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("largeRemote",on).apply();show(1);});android.widget.Switch padMode=new android.widget.Switch(this);padMode.setText("触摸板");padMode.setTextColor(MUTED);padMode.setTextSize(12);padMode.setChecked(prefs.getBoolean("remote_touchpad",false));padMode.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("remote_touchpad",on).apply();show(1);});toolbar.addView(padMode);toolbar.addView(large);body.addView(toolbar);gap(body,12);
     FrameLayout pad=new FrameLayout(this);pad.setAddStatesFromChildren(true);pad.setBackground(new RemoteFace());int maximum=Math.min(getResources().getDisplayMetrics().widthPixels-dp(36),dp(prefs.getBoolean("largeRemote",false)?344:280));int diameter=Math.min(maximum,Math.max(dp(230),(int)(getResources().getDisplayMetrics().heightPixels*(prefs.getBoolean("largeRemote",false)?.44f:.38f))));
     TextView center=button("确定",true,()->remoteKey(23));center.setContentDescription("确认");center.setTextSize(19);center.setPadding(0,0,0,0);RemoteKeyArt core=new RemoteKeyArt(-1);center.setTextColor(INK);center.setBackground(new RippleDrawable(ColorStateList.valueOf(UiPalette.color(0x5554dfca)),core,null));markIrKey(center,"OK");FrameLayout.LayoutParams cp=new FrameLayout.LayoutParams(dp(94),dp(94),Gravity.CENTER);pad.addView(center,cp);
     String[] labels={"⌃","⌄","‹","›"};String[] descriptions={"向上","向下","向左","向右"};int[] codes={19,20,21,22};int[] positions={Gravity.TOP|Gravity.CENTER_HORIZONTAL,Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL,Gravity.LEFT|Gravity.CENTER_VERTICAL,Gravity.RIGHT|Gravity.CENTER_VERTICAL};
     String[] irDirections={"UP","DOWN","LEFT","RIGHT"};
     for(int i=0;i<4;i++){TextView key=button(labels[i],false,()->{});key.setTextColor(Color.TRANSPARENT);key.setTextSize(34);key.setPadding(0,0,0,0);key.setContentDescription(descriptions[i]);key.setBackground(new RippleDrawable(ColorStateList.valueOf(UiPalette.color(0x2256e5d1)),new RemoteKeyArt(i),null));repeatKey(key,codes[i]);markIrKey(key,irDirections[i]);FrameLayout.LayoutParams lp=new FrameLayout.LayoutParams(dp(66),dp(66),positions[i]);lp.setMargins(dp(7),dp(4),dp(7),dp(4));pad.addView(key,lp);}
     LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(diameter,diameter);pp.gravity=Gravity.CENTER_HORIZONTAL;body.addView(pad,pp);gap(body,12);
+    TouchPad touchPad=new TouchPad(this,code->remoteKey(code));LinearLayout.LayoutParams tp=new LinearLayout.LayoutParams(diameter,diameter);tp.gravity=Gravity.CENTER_HORIZONTAL;body.addView(touchPad,tp);TextView padHint=text("滑动移动焦点 · 轻点确定 · 长按菜单",11,MUTED);padHint.setGravity(Gravity.CENTER);body.addView(padHint);boolean touchMode=prefs.getBoolean("remote_touchpad",false);pad.setVisibility(touchMode?View.GONE:View.VISIBLE);touchPad.setVisibility(touchMode?View.VISIBLE:View.GONE);padHint.setVisibility(touchMode?View.VISIBLE:View.GONE);gap(body,12);
     int actionDiameter=Math.min((getResources().getDisplayMetrics().widthPixels-dp(28))/3,dp(76+28*Math.max(0,getResources().getConfiguration().fontScale-1)));
     LinearLayout actions=row();String[] names={"返回","主页","菜单"};String[] irActions={"BACK","HOME","MENU"};int[] keycodes={4,3,82};for(int i=0;i<3;i++){final int code=keycodes[i];LinearLayout key=column();key.setGravity(Gravity.CENTER);key.setPadding(dp(8),dp(12),dp(8),dp(10));DepthSurface bg=new DepthSurface(getResources().getDisplayMetrics().density,50,false);key.setBackground(new RippleDrawable(ColorStateList.valueOf(UiPalette.color(0x2256e5d1)),bg,null));key.addView(new LineIcon(this,5+i,INK),new LinearLayout.LayoutParams(dp(25),dp(25)));gap(key,5);TextView caption=text(names[i],12,INK);caption.setGravity(Gravity.CENTER);key.addView(caption);caption.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);key.setContentDescription(names[i]);pressMotion(key);key.setFocusable(true);key.setAccessibilityDelegate(new View.AccessibilityDelegate(){@Override public void onInitializeAccessibilityNodeInfo(View host,AccessibilityNodeInfo info){super.onInitializeAccessibilityNodeInfo(host,info);info.setClassName(Button.class.getName());}});key.setOnClickListener(v->{v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);remoteKey(code);});key.setElevation(dp(3));markIrKey(key,irActions[i]);FrameLayout slot=new FrameLayout(this);FrameLayout.LayoutParams circle=new FrameLayout.LayoutParams(actionDiameter,actionDiameter,Gravity.CENTER);slot.addView(key,circle);actions.addView(slot,new LinearLayout.LayoutParams(0,actionDiameter+dp(8),1));}body.addView(actions);gap(body,10);
     LinearLayout volume=card(body);volume.setPadding(dp(12),dp(10),dp(12),dp(9));volume.setBackground(new GlassSurface(volume,(AuroraLayout)root,28,false));TextView volumeTitle=text("音量",12,MUTED);volumeTitle.setGravity(Gravity.CENTER);volume.addView(volumeTitle);LinearLayout volumeRow=row();VolumeGlide glide=new VolumeGlide(this,()->!irMode()?requestConnection():irAvailable("VOL_UP")&&irAvailable("VOL_DOWN"),dir->remoteKey(dir>0?24:25),()->motionEnabled());volumeGlide=glide;View minus=iconButton("减小音量",12,INK,()->{if(irMode()||requestConnection()){remoteKey(25);glide.feedback(-1);}});repeatVolume((TextView)((FrameLayout)minus).getChildAt(0),25,()->glide.feedback(-1));markIrKey(minus,"VOL_DOWN");volumeRow.addView(minus,new LinearLayout.LayoutParams(dp(44),dp(44)));volumeRow.addView(glide,new LinearLayout.LayoutParams(0,dp(46),1));View plus=iconButton("增大音量",13,INK,()->{if(irMode()||requestConnection()){remoteKey(24);glide.feedback(1);}});repeatVolume((TextView)((FrameLayout)plus).getChildAt(0),24,()->glide.feedback(1));markIrKey(plus,"VOL_UP");volumeRow.addView(plus,new LinearLayout.LayoutParams(dp(44),dp(44)));volume.addView(volumeRow);TextView volumeHint=text("左右拖动调节 · 松手回中",10,MUTED);volumeHint.setGravity(Gravity.CENTER);volume.addView(volumeHint);if(irMode()&&(!irAvailable("VOL_UP")||!irAvailable("VOL_DOWN"))){glide.setEnabled(false);glide.setAlpha(.38f);volumeHint.setText("滑动音量需同时具备音量＋和音量－");}
@@ -1354,33 +1358,28 @@ public class MainActivity extends Activity {
       section(body,"投影","大眼橙投影专属入口：直接打开对焦 / 梯形校正。");
       pair(body,"对焦设置",()->openProjectorScreen("打开对焦设置",ProjectorKeys.FOCUS),"梯形校正",()->openProjectorScreen("打开梯形校正",ProjectorKeys.KEYSTONE));
     }
-    section(input, "输入文字", "直接输入仅支持英文、数字及部分符号；中文需设备端输入法支持，本版暂不提供。");
+    section(input, "输入文字", "英文、数字直接发送；中文需电视端输入法（见下方状态）。");
     EditText e = field("例如：youtube 或搜索关键词", draftRemote);
     remoteInput = e;
     input.addView(e);
-    addButton(
-        input,
-        "发送到设备",
-        true,
-        () -> {
-          String value = e.getText().toString();
-          if (value.isEmpty()) return;
-          if (!value.matches("[A-Za-z0-9 _.,:/@+?=\\-]*") || value.contains("%")) {
-            dialog("暂不支持这些字符", "请使用英文、数字或常见符号。中文输入将在后续适配设备端输入法。");
-            return;
-          }
-          run(
-              "输入文字",
-              () -> {
-                require();
-                return adb.shell("input text " + AdbClient.quote(value.replace(" ", "%s")))
-                        .require()
-                        .isEmpty()
-                    ? "已发送"
-                    : "已发送";
-              },
-              null);
-        });
+    TextView tvStatus = text("中文输入法：正在检查…", 12, MUTED);
+    remoteInputStatus = tvStatus;
+    input.addView(tvStatus);
+    addButton(input, "发送到设备", true, () -> sendRemoteText());
+    LinearLayout kbRow = row();
+    TextView backspace = button("退格", false, () -> remoteKey(67));
+    LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(0, -2, 1);
+    bp.rightMargin = dp(5);
+    kbRow.addView(backspace, bp);
+    TextView enter = button("回车", false, () -> remoteKey(66));
+    LinearLayout.LayoutParams ep = new LinearLayout.LayoutParams(0, -2, 1);
+    ep.leftMargin = dp(5);
+    kbRow.addView(enter, ep);
+    input.addView(kbRow);
+    TextView restore = button("恢复电视输入法", false, () -> restoreTvKeyboard());
+    restore.setVisibility(View.GONE);
+    remoteRestoreButton = restore;
+    input.addView(restore);
   }
 
   private String remoteMode(){String mode=prefs.getString("remote_mode",prefs.getBoolean("ir_mode",false)?"ir":"adb");return "hybrid".equals(mode)?"ir":mode;}
@@ -1741,6 +1740,8 @@ public class MainActivity extends Activity {
   private long keyWarning = 0;
   private final java.util.concurrent.atomic.AtomicBoolean keyPending =
       new java.util.concurrent.atomic.AtomicBoolean(false);
+  private final java.util.concurrent.atomic.AtomicBoolean tapPending =
+      new java.util.concurrent.atomic.AtomicBoolean(false);
 
   private void key(int code) {
     if (!requestConnection()) return;
@@ -1762,6 +1763,136 @@ public class MainActivity extends Activity {
             keyPending.set(false);
           }
         });
+  }
+
+  /** 截屏点按：把截图上的点发成电视上的 input tap。仅 ADB 模式；轻量发送，失败才提示。 */
+  private void tap(int x, int y) {
+    if (irMode()) { toast("点按屏幕仅支持 ADB 连接"); return; }
+    if (!requestConnection()) return;
+    if(!capabilityAllowed(DeviceCapabilities.REMOTE))return;
+    if (!tapPending.compareAndSet(false, true)) return;
+    keys.execute(
+        () -> {
+          try {
+            require();
+            adb.shell("input tap " + x + " " + y).require();
+            if(capabilityClient==adb&&capabilitySnapshot!=null)capabilitySnapshot.success(DeviceCapabilities.REMOTE);
+          } catch (Exception e) {
+            long now = System.currentTimeMillis();
+            if (now - keyWarning > 2500) {
+              keyWarning = now;
+              ui.post(() -> toast("点按失败：" + message(e)));
+            }
+          } finally {
+            tapPending.set(false);
+          }
+        });
+  }
+
+  /** 手机键盘发送：英文数字走 input text；中文走 ADBKeyBoard 的 base64 广播；未装输入法时提示安装。 */
+  private void sendRemoteText() {
+    if (remoteInput == null) return;
+    String value = remoteInput.getText().toString();
+    if (value.isEmpty()) return;
+    if (value.contains("%")) { dialog("暂不支持 % 字符", "输入内容里不能有 %，请去掉再发送。"); return; }
+    if (TvKeyboard.isAscii(value)) {
+      run("输入文字", () -> { require(); adb.shell(TvKeyboard.textCommand(value)).require(); return "已发送"; }, null);
+      return;
+    }
+    if (!prefs.getBoolean("tv_keyboard_ready", false)) {
+      pendingChineseText = value;
+      new DeckDialogBuilder(this).setTitle("中文输入需要电视端输入法")
+          .setMessage("手机输中文要靠电视上的 ADBKeyBoard 输入法（开源，GPLv2，来源 senzhk/ADBKeyBoard）。只在电视上装一个 18KB 的输入法，不改手机。装好后这段文字会自动发过去。")
+          .setNegativeButton("取消", null)
+          .setPositiveButton("安装并启用", (d, w) -> installTvKeyboard())
+          .show();
+      return;
+    }
+    run("输入文字", () -> {
+      require();
+      String current = TvKeyboard.parseDefaultIme(adb.shell(TvKeyboard.currentImeProbe(), 15000).require());
+      if (!TvKeyboard.IME.equals(current)) {
+        prefs.edit().putBoolean("tv_keyboard_ready", false).apply();
+        throw new IOException("电视输入法不是 ADBKeyBoard，请在面板里重新启用中文输入法");
+      }
+      adb.shell(TvKeyboard.broadcastCommand(value), 15000).require();
+      return "已发送";
+    }, () -> refreshTvKeyboardStatus());
+  }
+
+  /** 下载 ADBKeyBoard → 装到电视 → 启用并设为当前输入法 → 核对 → 自动发出待发送的中文。 */
+  private void installTvKeyboard() {
+    File file = new File(getCacheDir(), "adbkeyboard-" + UUID.randomUUID() + ".apk");
+    run("安装电视输入法", () -> {
+      try {
+        taskProgress("正在下载中文输入法…");
+        TvKeyboard.download(file, stage -> taskProgress(stage));
+        PackageInfo info = archiveInfo(file);
+        if (!TvKeyboard.PKG.equals(info.packageName)) throw new IOException("下载的安装包包名不符，未安装");
+        taskProgress("正在安装到电视…");
+        ApkTransfer.install(Collections.singletonList(file), new ApkTransfer.Device() {
+          public void push(File f, String path) throws Exception {
+            taskProgress("正在传输 · " + f.getName());
+            try (InputStream in = new FileInputStream(f)) { adb.push(in, path, n -> transferProgress(n)); }
+          }
+          public String shell(String command) throws Exception {
+            if (command.startsWith("pm install")) taskProgress("正在安装，等待电视确认…");
+            return adb.shell(command, 120000).require();
+          }
+        });
+        taskProgress("正在启用输入法…");
+        adb.shell(TvKeyboard.enableCommand(), 15000).require();
+        String original = TvKeyboard.parseDefaultIme(adb.shell(TvKeyboard.currentImeProbe(), 15000).require());
+        if (!original.isEmpty() && !TvKeyboard.IME.equals(original)) prefs.edit().putString("tv_keyboard_original", original).apply();
+        adb.shell(TvKeyboard.setCommand(), 15000).require();
+        String current = TvKeyboard.parseDefaultIme(adb.shell(TvKeyboard.currentImeProbe(), 15000).require());
+        if (!TvKeyboard.IME.equals(current)) throw new IOException("输入法未切换成功，请在电视设置里手动选择 ADBKeyBoard");
+        prefs.edit().putBoolean("tv_keyboard_ready", true).apply();
+        return "中文输入法已启用";
+      } catch (Exception e) { file.delete(); throw e; }
+    }, () -> {
+      refreshTvKeyboardStatus();
+      if (pendingChineseText != null && !pendingChineseText.isEmpty()) { pendingChineseText = null; sendRemoteText(); }
+    });
+  }
+
+  /** 切回电视原来的输入法。 */
+  private void restoreTvKeyboard() {
+    run("恢复电视输入法", () -> {
+      require();
+      String original = prefs.getString("tv_keyboard_original", "");
+      if (original.isEmpty()) throw new IOException("没有记录原来的输入法，请在电视设置里手动切换");
+      adb.shell(TvKeyboard.restoreCommand(original), 15000).require();
+      prefs.edit().putBoolean("tv_keyboard_ready", false).apply();
+      return "已恢复电视输入法";
+    }, () -> refreshTvKeyboardStatus());
+  }
+
+  /** 打开键盘面板时后台刷新一次中文输入法状态；未启用时自动清除 ready 标志。 */
+  private void refreshTvKeyboardStatus() {
+    if (remoteInputStatus == null) return;
+    work.execute(() -> {
+      try {
+        require();
+        String pm = adb.shell(TvKeyboard.installedProbe(), 15000).require();
+        boolean installed = TvKeyboard.isInstalled(pm);
+        boolean active = false;
+        if (installed) {
+          String current = TvKeyboard.parseDefaultIme(adb.shell(TvKeyboard.currentImeProbe(), 15000).require());
+          active = TvKeyboard.isCurrentIme(current);
+        }
+        boolean ready = prefs.getBoolean("tv_keyboard_ready", false);
+        if (active != ready) prefs.edit().putBoolean("tv_keyboard_ready", active).apply();
+        final String line = !installed ? "中文输入法：未安装（首次输入中文时会提示安装）" : active ? "中文输入法：已启用，可直接输入中文" : "中文输入法：已安装，未启用";
+        final boolean showRestore = active;
+        ui.post(() -> {
+          if (remoteInputStatus != null) remoteInputStatus.setText(line);
+          if (remoteRestoreButton != null) remoteRestoreButton.setVisibility(showRestore ? View.VISIBLE : View.GONE);
+        });
+      } catch (Exception e) {
+        ui.post(() -> { if (remoteInputStatus != null) remoteInputStatus.setText("中文输入法：状态未确认（连接后重试）"); });
+      }
+    });
   }
 
   private void openProjectorScreen(String title,String component){
@@ -1799,21 +1930,55 @@ public class MainActivity extends Activity {
             dialog("截图失败", "无法解析设备画面");
             return;
           }
-          ImageView im = new ImageView(this);
-          im.setImageBitmap(b);
-          im.setAdjustViewBounds(true);
-          im.setPadding(dp(12), dp(12), dp(12), dp(12));
-          new DeckDialogBuilder(this)
-              .setTitle("当前屏幕")
-              .setView(im)
-              .setNegativeButton("关闭", null)
-              .setPositiveButton(
-                  "保存 PNG",
-                  (d, w) ->
-                      createDocument(
-                          104, "image/png", "LinkDeck_" + System.currentTimeMillis() + ".png"))
-              .show();
+          showScreenshot(b, o.inSampleSize, o.outWidth, o.outHeight, false);
         });
+  }
+
+  /** 截图查看；点按模式下点图片即点电视上的对应位置（位图坐标即电视坐标）。 */
+  private void showScreenshot(Bitmap b, int sample, int fullW, int fullH, boolean tapMode) {
+    ImageView im = new ImageView(this);
+    im.setImageBitmap(b);
+    im.setAdjustViewBounds(true);
+    im.setPadding(dp(12), dp(12), dp(12), dp(12));
+    if (tapMode) {
+      final float[] down = new float[2];
+      im.setOnTouchListener((v, event) -> {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+          down[0] = event.getX();
+          down[1] = event.getY();
+          return true;
+        }
+        if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+          float moved = (float) Math.hypot(event.getX() - down[0], event.getY() - down[1]);
+          if (moved > dp(24)) return true;
+          Matrix inverse = new Matrix();
+          if (!im.getImageMatrix().invert(inverse)) return true;
+          float[] pt = new float[]{event.getX(), event.getY()};
+          inverse.mapPoints(pt);
+          int x = Math.max(0, Math.min(fullW - 1, Math.round(pt[0] * sample)));
+          int y = Math.max(0, Math.min(fullH - 1, Math.round(pt[1] * sample)));
+          v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+          tap(x, y);
+          return true;
+        }
+        return true;
+      });
+    }
+    AlertDialog.Builder builder = new DeckDialogBuilder(this)
+        .setTitle(tapMode ? "点按屏幕" : "当前屏幕")
+        .setView(im)
+        .setNegativeButton("关闭", null);
+    if (tapMode) {
+      builder.setPositiveButton("完成", null);
+    } else {
+      builder.setNeutralButton("点按屏幕", (d, w) -> showScreenshot(b, sample, fullW, fullH, true));
+      builder.setPositiveButton(
+          "保存 PNG",
+          (d, w) ->
+              createDocument(
+                  104, "image/png", "LinkDeck_" + System.currentTimeMillis() + ".png"));
+    }
+    builder.show();
   }
 
   private void applications() {
